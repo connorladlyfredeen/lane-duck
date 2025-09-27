@@ -137,6 +137,9 @@ async def pools(
         return [
             {
                 "pool_name": pool["complexname"],
+                "website": pool.get("website", ""),
+                "address": pool.get("address", "").strip(),
+                "coordinates": {"x": pool.get("x", 0), "y": pool.get("y", 0)},
                 "times": [
                     {
                         "start_time": swim_data["start_time"],
