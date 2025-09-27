@@ -62,9 +62,33 @@ Each pool object already contains a `website` field with Toronto's facility page
 
 ---
 
+## Data Accuracy Issues
+
+### 5. Fix week numbering inconsistency in Toronto API
+**Priority**: High
+**Effort**: Medium
+
+Currently we assume week1.json = current week and week2.json = next week, but Toronto's API doesn't always follow this pattern. Some pools may have different week numbering or date ranges.
+
+**Issues**:
+- Week1 might not always be the current calendar week
+- Some pools may have different scheduling periods
+- Date ranges in the API response should be validated against actual calendar dates
+
+**Solution approaches**:
+- Parse the actual date ranges from the API response data
+- Validate dates against current calendar week before processing
+- Add date range detection to determine which week file contains current/future dates
+- Consider fetching multiple week files and filtering by actual dates
+- Add logging to track when week numbering doesn't match expectations
+
+**Current logic**: `scrape.py:181` assumes `[(1, 0), (2, 1)]` where week1=current, week2=next
+
+---
+
 ## Technical Debt
 
-### 5. Update FastAPI event handlers
+### 6. Update FastAPI event handlers
 **Priority**: Low
 **Effort**: Low
 
