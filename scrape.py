@@ -43,20 +43,13 @@ def fetch_locations_with_retries(max_retries=3, backoff_factor=2):
                 raise
 
 def process_locations(locations):
-    good_list = []
-    bad_list = []
-    count = 0
-
+    # Return all locations - we'll filter based on actual schedule data later
+    location_list = []
     for location in locations:
-        has_lane_swim = location['attributes']['activity_type'] is not None and location['attributes']['activity_type'].find('Lane Swim') != -1
-        if has_lane_swim:
-            count += 1
-            good_list.append(location['attributes'])
-        else:
-            bad_list.append(location['attributes']['complexname'])
+        location_list.append(location['attributes'])
 
-    logger.info(f"Total locations: {count}\n\n\n")
-    return good_list
+    logger.info(f"Total locations to process: {len(location_list)}")
+    return location_list
 
 def load_good_list_from_cache():
     if os.path.exists(CACHE_FILE):
@@ -93,12 +86,14 @@ def fetch_with_retries(url, max_retries=3, backoff_factor=2):
 
 from datetime import datetime, timedelta
 
-def convert_to_new_format(obj):
+def convert_to_new_format(obj, week_offset=0, swim_type_title=None):
     """
     Converts the input dictionary into the specified format.
 
     Args:
         obj (dict): Input dictionary with fields like id, day, title, status, etc.
+        week_offset (int): 0 for current week, 1 for next week
+        swim_type_title (str): The swim type title (e.g., "Lane Swim: Long Course (50m)")
 
     Returns:
         dict: Reformatted dictionary with datetime objects and structured fields.
@@ -118,6 +113,9 @@ def convert_to_new_format(obj):
     today = datetime.now()
     start_of_week = today - timedelta(days=today.weekday())  # Monday of the current week
 
+    # Add week offset for next week data
+    start_of_week = start_of_week + timedelta(weeks=week_offset)
+
     # Determine the date for the given day
     day_name = obj.get("day", "").lower()
     day_offset = days_of_week.get(day_name, 0)
@@ -132,19 +130,30 @@ def convert_to_new_format(obj):
     start_datetime = datetime.strptime(f"{day_date.date()} {start_time_str}", "%Y-%m-%d %I:%M %p") if start_time_str else None
     end_datetime = datetime.strptime(f"{day_date.date()} {end_time_str}", "%Y-%m-%d %I:%M %p") if end_time_str else None
 
+    # Extract pool length from swim type title
+    pool_length = None
+    if swim_type_title:
+        if "Long Course (50m)" in swim_type_title:
+            pool_length = "50m"
+        elif "Short Course (25m)" in swim_type_title:
+            pool_length = "25m"
+        else:
+            pool_length = "Unknown"  # Default for regular "Lane Swim"
+
     # Return the reformatted dictionary
     return {
         "status": obj.get("status", "").lower(),
         "start_time": start_datetime.strftime("%Y-%m-%dT%H:%M:%S") if start_datetime else None,
         "end_time": end_datetime.strftime("%Y-%m-%dT%H:%M:%S") if end_datetime else None,
-        "id": int(obj.get("id", 0))
+        "id": int(obj.get("id", 0)),
+        "pool_length": pool_length
     }
 
 
-def process_swim_data(raw_swim_data: dict) -> dict:
+def process_swim_data(raw_swim_data: dict, week_offset=0) -> dict:
     swim_data_objs = [program["days"] for program in raw_swim_data['programs'] if program['program'] == 'Swim - Drop-In']
     if len(swim_data_objs) == 0:
-        return {}
+        return []
     elif len(swim_data_objs) > 1:
         logger.warning(f"Warning: Found {len(swim_data_objs)} swim data objects. Using the first one.")
     swim_data_objs = swim_data_objs[0]
@@ -152,8 +161,9 @@ def process_swim_data(raw_swim_data: dict) -> dict:
     for swim_data_obj in swim_data_objs:
         if swim_data_obj['title'] in {'Lane Swim', 'Lane Swim: Long Course (50m)', 'Lane Swim: Short Course (25m)'} and swim_data_obj['status'] == 'active':
             filtered_sessions = [session for session in swim_data_obj['times'] if session['status'] == 'active']
-            flattened_swim_sessions.extend([convert_to_new_format(session) for session in filtered_sessions])
-    logger.info(f"Found {len(flattened_swim_sessions)} active lane swim sessions.")
+            swim_type_title = swim_data_obj['title']
+            flattened_swim_sessions.extend([convert_to_new_format(session, week_offset, swim_type_title) for session in filtered_sessions])
+    logger.info(f"Found {len(flattened_swim_sessions)} active lane swim sessions for week offset {week_offset}.")
     return flattened_swim_sessions
 
     
@@ -165,37 +175,48 @@ def process_locations_with_data(locations, good_list_file):
         location_id = location['locationid']
         logger.info(f"Processing location: {location_id}")
 
-        url = f"https://www.toronto.ca/data/parks/live/locations/{location_id}/swim/week1.json"
+        all_swim_data = []
 
-        try:
-            response = fetch_with_retries(url)
-            # Decode the response explicitly as UTF-16
-            raw_response = response.content.decode('utf-16', errors='replace')
+        # Fetch both current week and next week
+        for week_num, week_offset in [(1, 0), (2, 1)]:
+            url = f"https://www.toronto.ca/data/parks/live/locations/{location_id}/swim/week{week_num}.json"
 
-            # Remove invalid characters at the start of the response
-            cleaned_response = re.sub(r'^[^\{]*', '', raw_response)
+            try:
+                response = fetch_with_retries(url)
+                # Decode the response explicitly as UTF-16
+                raw_response = response.content.decode('utf-16', errors='replace')
 
-            if cleaned_response == "":
-                logger.info(f"Empty response for location {location_id}.")
-                location['swim_data'] = []
-                continue
+                # Remove invalid characters at the start of the response
+                cleaned_response = re.sub(r'^[^\{]*', '', raw_response)
 
-            # Parse the cleaned JSON
-            data = json.loads(cleaned_response)
+                if cleaned_response == "":
+                    logger.info(f"Empty response for location {location_id} week {week_num}.")
+                    continue
 
-            # Augment the location with the fetched data
-            location['swim_data'] = process_swim_data(data)
+                # Parse the cleaned JSON
+                data = json.loads(cleaned_response)
 
-            # Cache the location data
+                # Process the swim data for this week
+                week_swim_data = process_swim_data(data, week_offset)
+                all_swim_data.extend(week_swim_data)
+
+            except json.JSONDecodeError as e:
+                logger.warning(f"JSON decoding failed for location {location_id} week {week_num}: {e}")
+            except Exception as e:
+                logger.error(f"Failed to fetch data for location {location_id} week {week_num}: {e}")
+
+            # Wait between requests
+            time.sleep(0.25 + random.uniform(0, 0.25))
+
+        # Only include locations that have actual lane swim data
+        if all_swim_data:
+            location['swim_data'] = all_swim_data
             updated_good_list.append(location)
+        else:
+            logger.info(f"No lane swim data found for location {location_id}, skipping.")
 
-        except json.JSONDecodeError as e:
-            logger.warning(f"JSON decoding failed for location {location_id}: {e}")
-        except Exception as e:
-            logger.error(f"Failed to fetch data for location {location_id}: {e}")
-
-        # Wait ~1 second between requests
-        time.sleep(0.25 + random.uniform(0, 0.5))
+        # Wait between locations
+        time.sleep(0.25 + random.uniform(0, 0.25))
 
     # Save the updated good list to the file
     with open(good_list_file, 'w', encoding='utf-8') as f:
@@ -203,30 +224,14 @@ def process_locations_with_data(locations, good_list_file):
     logger.info(f"Updated good list saved to {good_list_file}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Process swim location data.")
-    parser.add_argument(
-        "--use-cache",
-        action="store_true",
-        help="Use cached data if available, otherwise fetch from API."
-    )
-    args = parser.parse_args()
+    logger.info("Fetching fresh data from Toronto API...")
 
-    if args.use_cache:
-        logger.info("Using cache...")
-        good_list = load_good_list_from_cache()
-        if not good_list:
-            logger.info("Cache not found. Fetching data from API...")
-            locations = fetch_locations_with_retries()
-            good_list = process_locations(locations)
-            save_good_list_to_cache(good_list)
-    else:
-        logger.info("Fetching data from API...")
-        locations = fetch_locations_with_retries()
-        good_list = process_locations(locations)
-        save_good_list_to_cache(good_list)
+    # Always fetch fresh location data
+    locations = fetch_locations_with_retries()
+    location_list = process_locations(locations)
 
-    # Process all locations with detailed data
-    process_locations_with_data(good_list, CACHE_FILE)
+    # Process all locations with detailed data and filter by actual schedule content
+    process_locations_with_data(location_list, CACHE_FILE)
 
 if __name__ == "__main__":
     main()

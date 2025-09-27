@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaneDuck 🦆 - Toronto Pool Lane Finder</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .filters {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 20px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .filter-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .filter-group input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            padding: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-count {
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .pool-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: box-shadow 0.3s;
+        }
+
+        .pool-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .pool-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .pool-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 5px;
+        }
+
+        .pool-times {
+            padding: 20px;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .time-slot {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+        }
+
+        .time-slot.length-25m {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .time-slot.length-50m {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .time-range {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .time-date {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .pool-length {
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .no-results h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="header">
+                <h1>LaneDuck 🦆</h1>
+                <p>Find the perfect time to duck into a Toronto pool lane</p>
+            </div>
+
+            <div class="filters">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="startDate">Start Date & Time</label>
+                        <input
+                            type="datetime-local"
+                            id="startDate"
+                            v-model="startDate"
+                            step="3600"
+                        />
+                    </div>
+                    <div class="filter-group">
+                        <label for="endDate">End Date & Time</label>
+                        <input
+                            type="datetime-local"
+                            id="endDate"
+                            v-model="endDate"
+                            step="3600"
+                        />
+                    </div>
+                    <div class="filter-group">
+                        <button
+                            class="search-btn"
+                            @click="searchPools"
+                            :disabled="loading"
+                        >
+                            {{ loading ? 'Searching...' : 'Find Pools' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results">
+                <div v-if="error" class="error">
+                    {{ error }}
+                </div>
+
+                <div v-if="loading" class="loading">
+                    <h3>🏊‍♂️ Searching for available lanes...</h3>
+                </div>
+
+                <div v-if="!loading && pools.length > 0">
+                    <div class="results-header">
+                        <h2>Available Pools</h2>
+                        <span class="results-count">{{ pools.length }} pools found</span>
+                    </div>
+
+                    <div class="pool-legend" style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center; font-size: 0.9rem;">
+                        <span style="font-weight: 600;">Pool Lengths:</span>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <div style="width: 16px; height: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 4px;"></div>
+                            <span>Unknown Length</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <div style="width: 16px; height: 16px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 4px;"></div>
+                            <span>25m Short Course</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <div style="width: 16px; height: 16px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border-radius: 4px;"></div>
+                            <span>50m Long Course</span>
+                        </div>
+                    </div>
+
+                    <div class="pool-card" v-for="pool in pools" :key="pool.pool_name">
+                        <div class="pool-header">
+                            <div class="pool-name">{{ pool.pool_name }}</div>
+                        </div>
+                        <div class="pool-times">
+                            <div class="time-slots">
+                                <div class="time-slot"
+                                     :class="'length-' + (time.pool_length || 'standard').toLowerCase()"
+                                     v-for="time in pool.times"
+                                     :key="time.start_time">
+                                    <div class="pool-length" v-if="time.pool_length && time.pool_length !== 'Unknown'">
+                                        {{ time.pool_length }}
+                                    </div>
+                                    <div class="time-range">
+                                        {{ formatTime(time.start_time) }} - {{ formatTime(time.end_time) }}
+                                    </div>
+                                    <div class="time-date">
+                                        {{ formatDate(time.start_time) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="!loading && searched && pools.length === 0" class="no-results">
+                    <h3>No pools found</h3>
+                    <p>Try adjusting your date and time range</p>
+                </div>
+
+                <div v-if="!loading && !searched" class="no-results">
+                    <h3>Ready to find your perfect swim time?</h3>
+                    <p>Select a date range above and click "Find Pools"</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    startDate: '',
+                    endDate: '',
+                    pools: [],
+                    loading: false,
+                    error: null,
+                    searched: false
+                };
+            },
+            mounted() {
+                // Check URL parameters first
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlStartDate = urlParams.get('start');
+                const urlEndDate = urlParams.get('end');
+
+                if (urlStartDate && urlEndDate) {
+                    // Use dates from URL if available
+                    this.startDate = urlStartDate;
+                    this.endDate = urlEndDate;
+                } else {
+                    // Set default to today 6 AM to 11 PM
+                    const today = new Date();
+                    const startTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 6, 0); // 6 AM
+                    const endTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 0); // 11 PM
+
+                    this.startDate = this.formatDateTimeLocal(startTime);
+                    this.endDate = this.formatDateTimeLocal(endTime);
+                }
+            },
+            watch: {
+                startDate(newVal) {
+                    this.updateUrlParams();
+                },
+                endDate(newVal) {
+                    this.updateUrlParams();
+                }
+            },
+            methods: {
+                async searchPools() {
+                    if (!this.startDate || !this.endDate) {
+                        this.error = 'Please select both start and end dates';
+                        return;
+                    }
+
+                    this.loading = true;
+                    this.error = null;
+                    this.searched = true;
+
+                    try {
+                        const startParam = this.formatDateForAPI(this.startDate);
+                        const endParam = this.formatDateForAPI(this.endDate);
+
+                        const response = await fetch(
+                            `http://127.0.0.1:3000/pools?start_date=${startParam}&end_date=${endParam}&simple=true`
+                        );
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        this.pools = data.filter(pool => pool.times && pool.times.length > 0);
+                    } catch (err) {
+                        this.error = `Failed to fetch pool data: ${err.message}. Make sure the API server is running.`;
+                        this.pools = [];
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                updateUrlParams() {
+                    if (this.startDate && this.endDate) {
+                        const url = new URL(window.location);
+                        url.searchParams.set('start', this.startDate);
+                        url.searchParams.set('end', this.endDate);
+                        window.history.replaceState({}, '', url);
+                    }
+                },
+
+                formatDateTimeLocal(date) {
+                    // Format date for datetime-local input (YYYY-MM-DDTHH:00)
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+
+                    return `${year}-${month}-${day}T${hours}:00`;
+                },
+
+                formatDateForAPI(dateTimeLocal) {
+                    // Convert datetime-local to API format (YYYY-MM-DDTHH:MM:SS)
+                    return dateTimeLocal + ':00';
+                },
+
+                formatTime(isoString) {
+                    // Format time for display (HH:MM AM/PM)
+                    const date = new Date(isoString);
+                    return date.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                },
+
+                formatDate(isoString) {
+                    // Format date for display
+                    const date = new Date(isoString);
+                    return date.toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

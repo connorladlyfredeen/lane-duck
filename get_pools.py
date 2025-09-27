@@ -33,16 +33,65 @@
     #     ]
     # }]
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, BackgroundTasks
 from fastapi.responses import Response
 from fastapi.openapi.utils import get_openapi
+from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from typing import List, Optional
 import json
 import os
 import yaml
+import asyncio
+import subprocess
+import threading
+import time
 
 app = FastAPI()
+
+# Add CORS middleware to allow browser requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+# Global variable to track refresh task
+refresh_task_running = False
+
+def run_scraper():
+    """Run the scraper to refresh data"""
+    print("Running scraper to refresh pool data...")
+    try:
+        result = subprocess.run(["python", "scrape.py"],
+                              capture_output=True, text=True, timeout=1800)  # 30 min timeout
+        if result.returncode == 0:
+            print("Scraper completed successfully")
+        else:
+            print(f"Scraper failed with code {result.returncode}: {result.stderr}")
+    except subprocess.TimeoutExpired:
+        print("Scraper timed out after 30 minutes")
+    except Exception as e:
+        print(f"Error running scraper: {e}")
+
+def background_refresh_task():
+    """Background task that runs the scraper once daily"""
+    global refresh_task_running
+    while refresh_task_running:
+        run_scraper()
+        # Wait 24 hours (86400 seconds)
+        time.sleep(86400)
+
+def start_background_refresh():
+    """Start the background refresh task"""
+    global refresh_task_running
+    if not refresh_task_running:
+        refresh_task_running = True
+        thread = threading.Thread(target=background_refresh_task, daemon=True)
+        thread.start()
+        print("Background refresh task started - data will refresh once daily")
 
 def get_pools(start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> List[dict]:
     ## Create the tmp directory if it doesn't exist
@@ -51,6 +100,7 @@ def get_pools(start_date: Optional[datetime] = None, end_date: Optional[datetime
     with open('tmp/good_list_cache.json', 'r') as file:
         good_list = json.load(file)
     matched_pools = []
+    matched_pool_ids = set()
     for pool in good_list:
         for swim_data in pool['swim_data']:
             start_time = datetime.strptime(swim_data['start_time'], "%Y-%m-%dT%H:%M:%S")
@@ -60,8 +110,7 @@ def get_pools(start_date: Optional[datetime] = None, end_date: Optional[datetime
                 continue
             if end_date and end_time > end_date:
                 continue
-            # Check if the start_time is today and the end time is after the current time
-            if start_time.date() == datetime.now().date() and end_time > datetime.now():
+            if pool["locationid"] not in matched_pool_ids:
                 matched_pools.append(pool)
     return matched_pools
 
@@ -91,7 +140,8 @@ async def pools(
                 "times": [
                     {
                         "start_time": swim_data["start_time"],
-                        "end_time": swim_data["end_time"]
+                        "end_time": swim_data["end_time"],
+                        "pool_length": swim_data.get("pool_length", "Unknown")
                     }
                     for swim_data in pool["swim_data"]
                     if (
@@ -108,7 +158,8 @@ async def pools(
 
 # Generate OpenAPI schema and save it to openapi.yaml
 @app.on_event("startup")
-async def generate_openapi_yaml():
+async def startup_event():
+    # Generate OpenAPI schema
     openapi_schema = get_openapi(
         title="Toronto Swim Lane Tracker API",
         version="1.0.0",
@@ -117,6 +168,15 @@ async def generate_openapi_yaml():
     )
     with open("openapi.yaml", "w") as file:
         yaml.dump(openapi_schema, file, default_flow_style=False)
+
+    # Start background refresh task
+    start_background_refresh()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    global refresh_task_running
+    refresh_task_running = False
+    print("Background refresh task stopped")
 
 # Serve the OpenAPI schema as a YAML file
 @app.get("/openapi.yaml", response_class=Response, description="Get the OpenAPI schema in YAML format")
