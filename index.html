@@ -106,6 +106,32 @@
             transform: none;
         }
 
+        .location-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .location-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .location-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .location-btn.active {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+        }
+
         .results {
             padding: 30px;
         }
@@ -181,6 +207,13 @@
         .pool-address {
             font-size: 0.8rem;
             color: #6c757d;
+            margin-bottom: 4px;
+        }
+
+        .pool-distance {
+            font-size: 0.75rem;
+            color: #28a745;
+            font-weight: 600;
             margin-bottom: 4px;
         }
 
@@ -301,6 +334,16 @@
                             {{ loading ? 'Searching...' : 'Find Pools' }}
                         </button>
                     </div>
+                    <div class="filter-group">
+                        <button
+                            class="location-btn"
+                            @click="toggleLocationSorting"
+                            :disabled="locationLoading"
+                            :class="{ 'active': sortByDistance }"
+                        >
+                            {{ locationLoading ? '🔄 Getting Location...' : (sortByDistance ? '📍 Distance: ON' : '📍 Sort by Distance') }}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -343,6 +386,7 @@
                                 </a>
                                 <div class="pool-name" v-else>{{ pool.pool_name }}</div>
                                 <div class="pool-address" v-if="pool.address">{{ pool.address }}</div>
+                                <div class="pool-distance" v-if="pool.distance">{{ pool.distance }} away</div>
                                 <div class="pool-actions">
                                     <a :href="getDirectionsUrl(pool.coordinates)" target="_blank" class="directions-btn" v-if="pool.coordinates.x && pool.coordinates.y">
                                         📍 Directions
@@ -394,7 +438,11 @@
                     loading: false,
                     error: null,
                     searched: false,
-                    apiBaseUrl: this.getApiBaseUrl()
+                    apiBaseUrl: this.getApiBaseUrl(),
+                    userLocation: null,
+                    locationPermission: 'unknown', // 'unknown', 'granted', 'denied'
+                    sortByDistance: false,
+                    locationLoading: false
                 };
             },
             mounted() {
@@ -462,6 +510,12 @@
 
                         const data = await response.json();
                         this.pools = data.filter(pool => pool.times && pool.times.length > 0);
+
+                        // Apply distance sorting if enabled
+                        if (this.sortByDistance && this.userLocation) {
+                            this.calculateDistances();
+                            this.sortPoolsByDistance();
+                        }
                     } catch (err) {
                         this.error = `Failed to fetch pool data: ${err.message}. Make sure the API server is running.`;
                         this.pools = [];
@@ -520,6 +574,143 @@
                         return `https://www.google.com/maps/dir/?api=1&destination=${coordinates.y},${coordinates.x}`;
                     }
                     return '#';
+                },
+
+                async toggleLocationSorting() {
+                    if (this.sortByDistance) {
+                        // Turn off distance sorting
+                        this.sortByDistance = false;
+                        this.clearDistances();
+                        return;
+                    }
+
+                    // Try to get user location
+                    await this.getUserLocation();
+
+                    if (this.userLocation) {
+                        this.sortByDistance = true;
+                        this.calculateDistances();
+                        this.sortPoolsByDistance();
+                    }
+                },
+
+                async getUserLocation() {
+                    if (!navigator.geolocation) {
+                        this.error = 'Geolocation is not supported by this browser.';
+                        return;
+                    }
+
+                    this.locationLoading = true;
+                    this.error = null;
+
+                    try {
+                        const position = await new Promise((resolve, reject) => {
+                            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                                enableHighAccuracy: true,
+                                timeout: 10000,
+                                maximumAge: 300000 // 5 minutes
+                            });
+                        });
+
+                        this.userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        this.locationPermission = 'granted';
+                    } catch (error) {
+                        this.locationPermission = 'denied';
+
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                this.error = 'Location access denied. Please enable location permissions to sort by distance.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                this.error = 'Location information is unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                this.error = 'Location request timed out.';
+                                break;
+                            default:
+                                this.error = 'An unknown error occurred while retrieving location.';
+                                break;
+                        }
+                    } finally {
+                        this.locationLoading = false;
+                    }
+                },
+
+                calculateDistance(lat1, lng1, lat2, lng2) {
+                    // Haversine formula for calculating distance between two coordinates
+                    const R = 6371; // Earth's radius in kilometers
+                    const dLat = this.degToRad(lat2 - lat1);
+                    const dLng = this.degToRad(lng2 - lng1);
+                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                             Math.cos(this.degToRad(lat1)) * Math.cos(this.degToRad(lat2)) *
+                             Math.sin(dLng/2) * Math.sin(dLng/2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    const distance = R * c;
+
+                    // Return formatted distance string
+                    if (distance < 1) {
+                        return `${Math.round(distance * 1000)}m`;
+                    } else {
+                        return `${distance.toFixed(1)}km`;
+                    }
+                },
+
+                degToRad(deg) {
+                    return deg * (Math.PI/180);
+                },
+
+                calculateDistances() {
+                    if (!this.userLocation) return;
+
+                    this.pools.forEach(pool => {
+                        if (pool.coordinates && pool.coordinates.x && pool.coordinates.y) {
+                            pool.distance = this.calculateDistance(
+                                this.userLocation.lat,
+                                this.userLocation.lng,
+                                pool.coordinates.y, // y is latitude
+                                pool.coordinates.x  // x is longitude
+                            );
+                            // Store numeric distance for sorting
+                            pool.distanceKm = this.calculateDistanceKm(
+                                this.userLocation.lat,
+                                this.userLocation.lng,
+                                pool.coordinates.y,
+                                pool.coordinates.x
+                            );
+                        }
+                    });
+                },
+
+                calculateDistanceKm(lat1, lng1, lat2, lng2) {
+                    // Haversine formula returning numeric distance in km
+                    const R = 6371;
+                    const dLat = this.degToRad(lat2 - lat1);
+                    const dLng = this.degToRad(lng2 - lng1);
+                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                             Math.cos(this.degToRad(lat1)) * Math.cos(this.degToRad(lat2)) *
+                             Math.sin(dLng/2) * Math.sin(dLng/2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    return R * c;
+                },
+
+                sortPoolsByDistance() {
+                    if (!this.sortByDistance || !this.userLocation) return;
+
+                    this.pools.sort((a, b) => {
+                        const distanceA = a.distanceKm || Infinity;
+                        const distanceB = b.distanceKm || Infinity;
+                        return distanceA - distanceB;
+                    });
+                },
+
+                clearDistances() {
+                    this.pools.forEach(pool => {
+                        delete pool.distance;
+                        delete pool.distanceKm;
+                    });
                 }
             }
         }).mount('#app');
