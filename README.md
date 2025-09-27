@@ -20,4 +20,6 @@ You can see the api schema by hitting  `/openapi.yaml`
 - Does not factor in women's only or age 65+ lane times
 - Some indoor pools are labelled as outdoor if they have both
  (i.e. Giovani Caboto on Saint Claire)
-
+ 
+ ### Run in the background
+ `nohup uvicorn get_pools:app --host 127.0.0.1 --port 3000 > pools.log 2>&1 &`

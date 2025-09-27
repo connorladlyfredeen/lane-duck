@@ -343,7 +343,8 @@
                     pools: [],
                     loading: false,
                     error: null,
-                    searched: false
+                    searched: false,
+                    apiBaseUrl: this.getApiBaseUrl()
                 };
             },
             mounted() {
@@ -375,6 +376,18 @@
                 }
             },
             methods: {
+                getApiBaseUrl() {
+                    // Detect if running locally (file:// or localhost/127.0.0.1)
+                    const isLocal = window.location.protocol === 'file:' ||
+                                  window.location.hostname === 'localhost' ||
+                                  window.location.hostname === '127.0.0.1' ||
+                                  window.location.hostname === '';
+
+                    return isLocal
+                        ? 'http://127.0.0.1:3000'
+                        : 'https://www.connorladly.com/api/toronto-pools';
+                },
+
                 async searchPools() {
                     if (!this.startDate || !this.endDate) {
                         this.error = 'Please select both start and end dates';
@@ -390,7 +403,7 @@
                         const endParam = this.formatDateForAPI(this.endDate);
 
                         const response = await fetch(
-                            `http://127.0.0.1:3000/pools?start_date=${startParam}&end_date=${endParam}&simple=true`
+                            `${this.apiBaseUrl}/pools?start_date=${startParam}&end_date=${endParam}&simple=true`
                         );
 
                         if (!response.ok) {
