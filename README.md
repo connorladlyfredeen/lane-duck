@@ -34,10 +34,12 @@ Use the deployment script to automatically upload assets, restart nginx, and tes
 ```
 
 The script will:
-1. Upload all project files to the GCloud server
-2. Run `nginx-restart` on the server
+1. Check that you're on the main branch (deployments only allowed from main)
+2. Upload all project files to the GCloud server
 3. Test both frontend and API endpoints for 200 responses
 4. Restart the backend service if the API is not responding
+
+**Note**: The script will only run from the main branch to ensure production deployments are from stable code.
 
 ### Manual Deployment
 If you prefer manual deployment:
@@ -46,9 +48,8 @@ If you prefer manual deployment:
 # Upload files
 gcloud compute scp *.py *.html *.md connorladly-1:~/lane-duck/ --zone "us-west1-b" --project "connorladlydotcom"
 
-# Restart nginx
-gcloud compute ssh connorladly-1 --zone "us-west1-b" --project "connorladlydotcom" --command "nginx-restart"
-
 # Start backend service
 gcloud compute ssh connorladly-1 --zone "us-west1-b" --project "connorladlydotcom" --command "cd lane-duck && nohup uvicorn get_pools:app --host 127.0.0.1 --port 3000 > pools.log 2>&1 &"
+
+# Nginx configuration is handled separately by the server admin
 ```

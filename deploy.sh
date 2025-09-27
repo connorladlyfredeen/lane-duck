@@ -21,6 +21,17 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}🦆 LaneDuck Deployment Script${NC}"
 echo "================================"
 
+# Check if we're on main branch
+CURRENT_BRANCH=$(git branch --show-current)
+if [ "$CURRENT_BRANCH" != "main" ]; then
+    echo -e "${RED}❌ Error: Deployments can only be run from the main branch${NC}"
+    echo "Current branch: $CURRENT_BRANCH"
+    echo "Please switch to main branch first: git checkout main"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ On main branch - proceeding with deployment${NC}"
+
 # Step 1: Upload assets to remote server
 echo -e "${YELLOW}📦 Step 1: Uploading assets to server...${NC}"
 
@@ -46,16 +57,8 @@ gcloud compute scp .gitignore openapi.yaml "$SERVER:$REMOTE_DIR/" \
 
 echo -e "${GREEN}✅ Assets uploaded successfully${NC}"
 
-# Step 2: Restart nginx on the server
-echo -e "${YELLOW}🔄 Step 2: Restarting nginx...${NC}"
-
-gcloud compute ssh "$SERVER" --zone "$ZONE" --project "$PROJECT" \
-    --command "nginx-restart"
-
-echo -e "${GREEN}✅ Nginx restarted successfully${NC}"
-
-# Step 3: Test endpoints
-echo -e "${YELLOW}🧪 Step 3: Testing endpoints...${NC}"
+# Step 2: Test endpoints
+echo -e "${YELLOW}🧪 Step 2: Testing endpoints...${NC}"
 
 # Test frontend
 echo "Testing frontend at www.connorladly.com/lane-duck..."
