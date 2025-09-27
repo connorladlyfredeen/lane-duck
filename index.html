@@ -45,6 +45,17 @@
             opacity: 0.9;
         }
 
+        .disclaimer {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #856404;
+            text-align: center;
+        }
+
         .filters {
             padding: 30px;
             background: #f8f9fa;
@@ -56,6 +67,50 @@
             gap: 20px;
             align-items: end;
             flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+
+            .filter-group {
+                min-width: auto;
+            }
+
+            .pool-row {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 16px;
+            }
+
+            .pool-info {
+                flex: none;
+                margin-right: 0;
+                margin-bottom: 12px;
+                width: 100%;
+            }
+
+            .time-slots {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .time-slot {
+                min-width: calc(50% - 4px);
+                max-width: calc(50% - 4px);
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .disclaimer {
+                font-size: 0.8rem;
+                padding: 10px;
+            }
         }
 
         .filter-group {
@@ -303,6 +358,9 @@
             <div class="header">
                 <h1>LaneDuck 🦆</h1>
                 <p>Find the perfect time to duck into a Toronto pool lane</p>
+                <div class="disclaimer">
+                    ⚠️ <strong>Disclaimer:</strong> This data is not fully tested. Always validate pool swim times by clicking on the pool website link before visiting.
+                </div>
             </div>
 
             <div class="filters">

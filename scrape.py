@@ -168,6 +168,44 @@ def process_swim_data(raw_swim_data: dict, week_offset=0) -> dict:
 
     
 
+def determine_week_offset_from_data(data):
+    """
+    Determine the week offset based on actual dates in the API response.
+    Returns the number of weeks from the current week (0 = current week, 1 = next week, etc.)
+    """
+    today = datetime.now()
+    current_week_start = today - timedelta(days=today.weekday())  # Monday of current week
+
+    # Look for any swim session in the data to determine the week
+    for program in data.get('programs', []):
+        if program.get('program') == 'Swim - Drop-In':
+            for day_data in program.get('days', []):
+                if day_data.get('status') == 'active':
+                    for session in day_data.get('times', []):
+                        if session.get('status') == 'active':
+                            day_name = day_data.get('day', '').lower()
+
+                            # Map day names to weekday numbers
+                            days_of_week = {
+                                "monday": 0, "tuesday": 1, "wednesday": 2,
+                                "thursday": 3, "friday": 4, "saturday": 5, "sunday": 6
+                            }
+
+                            if day_name in days_of_week:
+                                day_offset = days_of_week[day_name]
+
+                                # Calculate which week this session belongs to
+                                for week_offset in range(4):  # Check up to 4 weeks ahead
+                                    test_week_start = current_week_start + timedelta(weeks=week_offset)
+                                    session_date = test_week_start + timedelta(days=day_offset)
+
+                                    # If this session is within the next 14 days from today, use this week offset
+                                    if session_date >= today and session_date <= today + timedelta(days=14):
+                                        return week_offset
+
+    # Default fallback: assume it's current week if we can't determine
+    return 0
+
 def process_locations_with_data(locations, good_list_file):
     updated_good_list = []
 
@@ -177,9 +215,11 @@ def process_locations_with_data(locations, good_list_file):
 
         all_swim_data = []
 
-        # Fetch both current week and next week
-        for week_num, week_offset in [(1, 0), (2, 1)]:
-            url = f"https://www.toronto.ca/data/parks/live/locations/{location_id}/swim/week{week_num}.json"
+        # Fetch multiple week files and determine their actual week offsets
+        week_files = [(1, "week1.json"), (2, "week2.json")]
+
+        for week_num, week_file in week_files:
+            url = f"https://www.toronto.ca/data/parks/live/locations/{location_id}/swim/{week_file}"
 
             try:
                 response = fetch_with_retries(url)
@@ -196,8 +236,13 @@ def process_locations_with_data(locations, good_list_file):
                 # Parse the cleaned JSON
                 data = json.loads(cleaned_response)
 
-                # Process the swim data for this week
-                week_swim_data = process_swim_data(data, week_offset)
+                # Determine the actual week offset based on dates in the data
+                actual_week_offset = determine_week_offset_from_data(data)
+
+                logger.info(f"Location {location_id} {week_file}: determined week offset {actual_week_offset}")
+
+                # Process the swim data for this week with the correct offset
+                week_swim_data = process_swim_data(data, actual_week_offset)
                 all_swim_data.extend(week_swim_data)
 
             except json.JSONDecodeError as e:

@@ -45,21 +45,9 @@ Allow users to find pools within a certain distance of their location:
 - Add query parameters for lat/lng and radius to API
 - Consider adding neighborhood/district filtering as alternative
 - Add map view showing pool locations
+- We already sort by closest so this shouldn't be hard
 
 **Data available**: Pool objects already contain `x` and `y` coordinates
-
-### 4. Add links from the pools to their website
-**Priority**: Low
-**Effort**: Low
-
-Each pool object already contains a `website` field with Toronto's facility page URL:
-- Add website links to the frontend pool cards
-- Consider adding "Get Directions" links using coordinates
-- Add facility phone numbers if available in the data
-- Link to Toronto's pool-specific schedule pages
-
-**Data available**: `website` field contains URLs like `https://www.toronto.ca/explore-enjoy/parks-recreation/places-spaces/parks-and-recreation-facilities/location/?id=272`
-
 ---
 
 ## Data Accuracy Issues
