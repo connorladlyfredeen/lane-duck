@@ -97,7 +97,6 @@ Currently the API will crash if `tmp/good_list_cache.json` doesn't exist. Should
 ## Additional Features to Consider
 
 - **Pool amenities display**: Show amenities like "Tot Pool", "Universal Change Room" from existing data
-- **Mobile responsiveness**: Ensure the web UI works well on mobile devices
 - **Favorites system**: Let users save preferred pools
 - **Notifications**: Alert users when favorite pools have new sessions
 - **Historical data**: Track and display pool closure patterns
