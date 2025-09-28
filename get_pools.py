@@ -42,10 +42,6 @@ from typing import List, Optional
 import json
 import os
 import yaml
-import asyncio
-import subprocess
-import threading
-import time
 
 app = FastAPI()
 
@@ -58,40 +54,6 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-# Global variable to track refresh task
-refresh_task_running = False
-
-def run_scraper():
-    """Run the scraper to refresh data"""
-    print("Running scraper to refresh pool data...")
-    try:
-        result = subprocess.run(["python", "scrape.py"],
-                              capture_output=True, text=True, timeout=1800)  # 30 min timeout
-        if result.returncode == 0:
-            print("Scraper completed successfully")
-        else:
-            print(f"Scraper failed with code {result.returncode}: {result.stderr}")
-    except subprocess.TimeoutExpired:
-        print("Scraper timed out after 30 minutes")
-    except Exception as e:
-        print(f"Error running scraper: {e}")
-
-def background_refresh_task():
-    """Background task that runs the scraper once daily"""
-    global refresh_task_running
-    while refresh_task_running:
-        run_scraper()
-        # Wait 24 hours (86400 seconds)
-        time.sleep(86400)
-
-def start_background_refresh():
-    """Start the background refresh task"""
-    global refresh_task_running
-    if not refresh_task_running:
-        refresh_task_running = True
-        thread = threading.Thread(target=background_refresh_task, daemon=True)
-        thread.start()
-        print("Background refresh task started - data will refresh once daily")
 
 def get_pools(start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> List[dict]:
     ## Create the tmp directory if it doesn't exist
@@ -172,14 +134,7 @@ async def startup_event():
     with open("openapi.yaml", "w") as file:
         yaml.dump(openapi_schema, file, default_flow_style=False)
 
-    # Start background refresh task
-    start_background_refresh()
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    global refresh_task_running
-    refresh_task_running = False
-    print("Background refresh task stopped")
 
 # Serve the OpenAPI schema as a YAML file
 @app.get("/openapi.yaml", response_class=Response, description="Get the OpenAPI schema in YAML format")

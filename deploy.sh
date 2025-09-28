@@ -57,6 +57,12 @@ gcloud compute scp .gitignore openapi.yaml "$SERVER:$REMOTE_DIR/" \
 
 echo -e "${GREEN}✅ Assets uploaded successfully${NC}"
 
+# Step 1.5: Restart PM2 service
+echo -e "${YELLOW}🔄 Restarting PM2 service...${NC}"
+gcloud compute ssh "$SERVER" --zone "$ZONE" --project "$PROJECT" \
+    --command "pm2 reload lane-duck"
+echo -e "${GREEN}✅ PM2 service restarted${NC}"
+
 # Step 2: Test endpoints
 echo -e "${YELLOW}🧪 Step 2: Testing endpoints...${NC}"
 

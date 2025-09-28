@@ -89,7 +89,7 @@
             .pool-info {
                 flex: none;
                 margin-right: 0;
-                margin-bottom: 12px;
+                margin-bottom: 6px;
                 width: 100%;
             }
 
@@ -110,6 +110,10 @@
             .disclaimer {
                 font-size: 0.8rem;
                 padding: 10px;
+            }
+
+            .pool-actions {
+                gap: 4px;
             }
         }
 
@@ -522,10 +526,19 @@
                     this.startDate = this.formatDateTimeLocal(startTime);
                     this.endDate = this.formatDateTimeLocal(endTime);
                 }
+
+                // Auto-search after setting default dates
+                this.searchPools();
             },
             watch: {
                 startDate(newVal) {
                     this.updateUrlParams();
+                    // Auto-set end date to same day at 11 PM if empty or different day
+                    if (newVal && (!this.endDate || this.getDatePart(newVal) !== this.getDatePart(this.endDate))) {
+                        const startDate = new Date(newVal);
+                        const endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 23, 0);
+                        this.endDate = this.formatDateTimeLocal(endDate);
+                    }
                 },
                 endDate(newVal) {
                     this.updateUrlParams();
@@ -647,8 +660,13 @@
 
                     if (this.userLocation) {
                         this.sortByDistance = true;
-                        this.calculateDistances();
-                        this.sortPoolsByDistance();
+                        // Re-run search with current timestamps to get fresh data with distance sorting
+                        if (this.startDate && this.endDate) {
+                            this.searchPools();
+                        } else {
+                            this.calculateDistances();
+                            this.sortPoolsByDistance();
+                        }
                     }
                 },
 
@@ -769,6 +787,11 @@
                         delete pool.distance;
                         delete pool.distanceKm;
                     });
+                },
+
+                getDatePart(dateTimeLocal) {
+                    // Extract just the date part (YYYY-MM-DD) from datetime-local format
+                    return dateTimeLocal ? dateTimeLocal.split('T')[0] : null;
                 }
             }
         }).mount('#app');
