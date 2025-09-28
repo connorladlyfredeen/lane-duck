@@ -16,6 +16,10 @@ logging.basicConfig(level=logging.WARNING)
 if not os.path.exists('tmp'):
     os.makedirs('tmp')
 
+## Create the logs directory if it doesn't exist
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+
 CACHE_FILE = "tmp/good_list_cache.json"
 
 def fetch_locations():
@@ -223,6 +227,16 @@ def process_locations_with_data(locations, good_list_file):
         json.dump(updated_good_list, f, ensure_ascii=False, indent=4)
     logger.info(f"Updated good list saved to {good_list_file}")
 
+def log_scrape_completion():
+    """Log the completion timestamp to logs/scrape_timestamp.log"""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_file = "logs/scrape_timestamp.log"
+
+    with open(log_file, 'a', encoding='utf-8') as f:
+        f.write(f"Scrape completed at: {timestamp}\n")
+
+    logger.info(f"Scrape completion logged to {log_file}")
+
 def main():
     logger.info("Fetching fresh data from Toronto API...")
 
@@ -232,6 +246,9 @@ def main():
 
     # Process all locations with detailed data and filter by actual schedule content
     process_locations_with_data(location_list, CACHE_FILE)
+
+    # Log completion timestamp
+    log_scrape_completion()
 
 if __name__ == "__main__":
     main()
