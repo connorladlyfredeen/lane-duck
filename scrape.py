@@ -177,7 +177,7 @@ def process_locations_with_data(locations, good_list_file):
 
         all_swim_data = []
 
-        # Fetch both current week and next week
+        # Fetch both current week and next week (reverting to simple assumption for now)
         for week_num, week_offset in [(1, 0), (2, 1)]:
             url = f"https://www.toronto.ca/data/parks/live/locations/{location_id}/swim/week{week_num}.json"
 
