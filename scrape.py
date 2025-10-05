@@ -227,6 +227,47 @@ def process_locations_with_data(locations, good_list_file):
         json.dump(updated_good_list, f, ensure_ascii=False, indent=4)
     logger.info(f"Updated good list saved to {good_list_file}")
 
+def filter_outdoor_pools(pools):
+    """Filter out pools with 'outdoor' in their name or location type (case insensitive)"""
+    filtered_pools = []
+    outdoor_count = 0
+
+    for pool in pools:
+        pool_name = pool.get('complexname', '').lower()
+        location_type = pool.get('location_type', '').lower()
+
+        if 'outdoor' in pool_name or 'outdoor' in location_type:
+            outdoor_count += 1
+            logger.info(f"Filtering out outdoor pool: {pool.get('complexname', 'Unknown')}")
+        else:
+            filtered_pools.append(pool)
+
+    logger.info(f"Filtered out {outdoor_count} outdoor pools. {len(filtered_pools)} pools remaining.")
+    return filtered_pools
+
+def deduplicate_pools(pools):
+    """Deduplicate pools by name while preserving all swim times"""
+    pool_map = {}
+    duplicate_count = 0
+
+    for pool in pools:
+        pool_name = pool.get('complexname', '')
+
+        if pool_name in pool_map:
+            # Merge swim data from duplicate pool
+            existing_pool = pool_map[pool_name]
+            if 'swim_data' in pool and 'swim_data' in existing_pool:
+                existing_pool['swim_data'].extend(pool['swim_data'])
+            elif 'swim_data' in pool:
+                existing_pool['swim_data'] = pool['swim_data']
+            duplicate_count += 1
+            logger.info(f"Merged duplicate pool: {pool_name}")
+        else:
+            pool_map[pool_name] = pool
+
+    logger.info(f"Deduplicated {duplicate_count} pools. {len(pool_map)} unique pools remaining.")
+    return list(pool_map.values())
+
 def log_scrape_completion():
     """Log the completion timestamp to logs/scrape_timestamp.log"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -244,8 +285,24 @@ def main():
     locations = fetch_locations_with_retries()
     location_list = process_locations(locations)
 
+    # Filter out outdoor pools
+    location_list = filter_outdoor_pools(location_list)
+
     # Process all locations with detailed data and filter by actual schedule content
     process_locations_with_data(location_list, CACHE_FILE)
+
+    # Load the data back and apply deduplication
+    with open(CACHE_FILE, 'r', encoding='utf-8') as f:
+        pool_data = json.load(f)
+
+    # Deduplicate pools by name while preserving all swim times
+    pool_data = deduplicate_pools(pool_data)
+
+    # Save the cleaned data back to the file
+    with open(CACHE_FILE, 'w', encoding='utf-8') as f:
+        json.dump(pool_data, f, ensure_ascii=False, indent=4)
+
+    logger.info(f"Data cleanup completed. Final pool count: {len(pool_data)}")
 
     # Log completion timestamp
     log_scrape_completion()
