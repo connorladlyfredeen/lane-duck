@@ -52,7 +52,7 @@ gcloud compute scp README.md CLAUDE.md TODOS.md "$SERVER:$REMOTE_DIR/" \
 
 # Upload configuration files
 echo "Uploading configuration files..."
-gcloud compute scp .gitignore openapi.yaml "$SERVER:$REMOTE_DIR/" \
+gcloud compute scp .gitignore openapi.yaml sitemap.xml "$SERVER:$REMOTE_DIR/" \
     --zone "$ZONE" --project "$PROJECT"
 
 echo -e "${GREEN}✅ Assets uploaded successfully${NC}"
