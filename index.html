@@ -608,6 +608,14 @@
 
             .filter-row-secondary { gap: 16px; }
 
+            /* Comfortable >=44px touch targets on mobile (WCAG / iOS guidance) */
+            .quick-btn, .chip, .directions-btn {
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
             .results { padding: 18px 14px 24px; }
 
             .pool-row {
