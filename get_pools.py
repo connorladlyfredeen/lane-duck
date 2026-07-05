@@ -74,6 +74,9 @@ def get_pools(start_date: Optional[datetime] = None, end_date: Optional[datetime
                 continue
             if pool["locationid"] not in matched_pool_ids:
                 matched_pools.append(pool)
+                matched_pool_ids.add(pool["locationid"])
+                # This pool already qualifies; no need to check its other sessions
+                break
     return matched_pools
 
 @app.get("/pools", response_model=List[dict])
@@ -102,6 +105,11 @@ async def pools(
                 "website": pool.get("website", ""),
                 "address": pool.get("address", "").strip(),
                 "coordinates": {"x": pool.get("x", 0), "y": pool.get("y", 0)},
+                "pool_type": pool.get("pool_type") or (
+                    "Outdoor"
+                    if "outdoor" in (pool.get("location_type", "") + pool.get("complexname", "")).lower()
+                    else "Indoor"
+                ),
                 "times": [
                     {
                         "start_time": swim_data["start_time"],

@@ -134,15 +134,14 @@ def convert_to_new_format(obj, week_offset=0, swim_type_title=None):
     start_datetime = datetime.strptime(f"{day_date.date()} {start_time_str}", "%Y-%m-%d %I:%M %p") if start_time_str else None
     end_datetime = datetime.strptime(f"{day_date.date()} {end_time_str}", "%Y-%m-%d %I:%M %p") if end_time_str else None
 
-    # Extract pool length from swim type title
-    pool_length = None
+    # Extract pool length from swim type title. Toronto encodes it as a
+    # parenthetical like "(50m)" or "(25m)" (and occasionally yards, e.g.
+    # "(25y)"). Most plain "Lane Swim" titles carry no length -> "Unknown".
+    pool_length = "Unknown"
     if swim_type_title:
-        if "Long Course (50m)" in swim_type_title:
-            pool_length = "50m"
-        elif "Short Course (25m)" in swim_type_title:
-            pool_length = "25m"
-        else:
-            pool_length = "Unknown"  # Default for regular "Lane Swim"
+        length_match = re.search(r'\((\d+)\s*([my])\)', swim_type_title, re.IGNORECASE)
+        if length_match:
+            pool_length = f"{length_match.group(1)}{length_match.group(2).lower()}"
 
     # Return the reformatted dictionary
     return {
@@ -227,9 +226,10 @@ def process_locations_with_data(locations, good_list_file):
         json.dump(updated_good_list, f, ensure_ascii=False, indent=4)
     logger.info(f"Updated good list saved to {good_list_file}")
 
-def filter_outdoor_pools(pools):
-    """Filter out pools with 'outdoor' in their name or location type (case insensitive)"""
-    filtered_pools = []
+def tag_pool_type(pools):
+    """Tag each pool as Indoor or Outdoor (case insensitive) instead of dropping
+    outdoor pools. Outdoor lane swims are kept so the frontend can display and
+    filter by them."""
     outdoor_count = 0
 
     for pool in pools:
@@ -237,13 +237,13 @@ def filter_outdoor_pools(pools):
         location_type = pool.get('location_type', '').lower()
 
         if 'outdoor' in pool_name or 'outdoor' in location_type:
+            pool['pool_type'] = 'Outdoor'
             outdoor_count += 1
-            logger.info(f"Filtering out outdoor pool: {pool.get('complexname', 'Unknown')}")
         else:
-            filtered_pools.append(pool)
+            pool['pool_type'] = 'Indoor'
 
-    logger.info(f"Filtered out {outdoor_count} outdoor pools. {len(filtered_pools)} pools remaining.")
-    return filtered_pools
+    logger.info(f"Tagged {outdoor_count} outdoor and {len(pools) - outdoor_count} indoor pools.")
+    return pools
 
 def deduplicate_pools(pools):
     """Deduplicate pools by name while preserving all swim times"""
@@ -285,8 +285,8 @@ def main():
     locations = fetch_locations_with_retries()
     location_list = process_locations(locations)
 
-    # Filter out outdoor pools
-    location_list = filter_outdoor_pools(location_list)
+    # Tag pools as Indoor/Outdoor (previously outdoor pools were dropped here)
+    location_list = tag_pool_type(location_list)
 
     # Process all locations with detailed data and filter by actual schedule content
     process_locations_with_data(location_list, CACHE_FILE)
