@@ -22,7 +22,7 @@
     <link rel="canonical" href="https://www.connorladly.com/lane-duck">
 
     <!-- Theme -->
-    <meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#1AA8A0">
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Toronto Public Pool Lane Swimming Schedule | LaneDuck">
@@ -64,6 +64,60 @@
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
+        :root {
+            --bg-1: #e8f3f2;
+            --bg-2: #d6e9ea;
+            --surface: #ffffff;
+            --surface-2: #f5f8f8;
+            --surface-3: #eef3f3;
+            --border: #e0e7e7;
+            --border-strong: #cdd8d8;
+            --text: #1C2B2A;
+            --text-muted: #5c6d6c;
+            --text-faint: #8a9998;
+            --accent: #1AA8A0;
+            --accent-strong: #148179;
+            --accent-soft: #e4f5f4;
+            --accent-softer: #f0faf9;
+            --warn-bg: #fff7e6;
+            --warn-border: #f0d089;
+            --warn-text: #8a6212;
+            --danger-bg: #fdecec;
+            --danger-border: #f2b8b8;
+            --danger-text: #a12a2a;
+            --shadow-sm: 0 1px 2px rgba(20,45,44,0.06);
+            --shadow-md: 0 4px 16px rgba(20,45,44,0.08);
+            --shadow-lg: 0 24px 60px rgba(20,45,44,0.16);
+            --radius: 14px;
+            --radius-sm: 10px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-1: #0e1a1a;
+                --bg-2: #12201f;
+                --surface: #16211f;
+                --surface-2: #1b2725;
+                --surface-3: #202e2c;
+                --border: #2a3b39;
+                --border-strong: #354744;
+                --text: #e8f0ef;
+                --text-muted: #9fb1af;
+                --text-faint: #7b8c8a;
+                --accent: #2fc3ba;
+                --accent-strong: #56d6ce;
+                --accent-soft: #16302e;
+                --accent-softer: #12292722;
+                --warn-bg: #33280f;
+                --warn-border: #6b551f;
+                --warn-text: #e8c983;
+                --danger-bg: #3a1d1d;
+                --danger-border: #6b3232;
+                --danger-text: #f0a9a9;
+                --shadow-lg: 0 24px 60px rgba(0,0,0,0.5);
+            }
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -71,374 +125,424 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background:
+                radial-gradient(1200px 600px at 15% -10%, var(--bg-2), transparent 60%),
+                linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+            background-attachment: fixed;
+            color: var(--text);
             min-height: 100vh;
-            padding: 20px;
+            padding: 24px 16px 48px;
+            -webkit-font-smoothing: antialiased;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1120px;
             margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
             overflow: hidden;
+            border: 1px solid var(--border);
         }
 
         .header {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            padding: 30px;
+            background:
+                radial-gradient(600px 300px at 80% -40%, rgba(255,255,255,0.28), transparent 70%),
+                linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+            color: #fff;
+            padding: 34px 32px 28px;
             text-align: center;
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
         }
 
         .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+            font-size: 1.05rem;
+            opacity: 0.92;
+            margin-top: 6px;
+            font-weight: 400;
         }
 
         .disclaimer {
-            background: rgba(255, 193, 7, 0.2);
-            border: 1px solid #ffc107;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-top: 15px;
-            font-size: 0.9rem;
-            color: #856404;
+            background: rgba(255,255,255,0.16);
+            border: 1px solid rgba(255,255,255,0.35);
+            border-radius: var(--radius-sm);
+            padding: 11px 16px;
+            margin: 18px auto 0;
+            max-width: 720px;
+            font-size: 0.86rem;
+            line-height: 1.45;
+            color: #fff;
             text-align: center;
         }
 
+        .disclaimer strong { font-weight: 700; }
+
         .filters {
-            padding: 30px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
+            padding: 24px 28px;
+            background: var(--surface-2);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .quick-dates {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .quick-dates .qd-label {
+            font-weight: 600;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-right: 2px;
+        }
+
+        .quick-btn {
+            background: var(--surface);
+            border: 1.5px solid var(--border-strong);
+            color: var(--text);
+            padding: 7px 16px;
+            border-radius: 999px;
+            font-size: 0.86rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.15s, background 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .quick-btn:hover { transform: translateY(-1px); border-color: var(--accent); }
+
+        .quick-btn:focus-visible {
+            outline: 3px solid var(--accent-soft);
+            outline-offset: 1px;
+            border-color: var(--accent);
+        }
+
+        .quick-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
         }
 
         .filter-row {
             display: flex;
-            gap: 20px;
+            gap: 16px;
             align-items: end;
             flex-wrap: wrap;
         }
 
-        @media (max-width: 768px) {
-            .filter-row {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 15px;
-            }
-
-            .filter-group {
-                min-width: auto;
-            }
-
-            .pool-row {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 12px;
-            }
-
-            .pool-info {
-                flex: 0 0 auto !important;
-                margin-right: 0;
-                margin-bottom: 8px;
-                width: 100%;
-                height: auto;
-            }
-
-            .time-slots {
-                width: 100%;
-                justify-content: flex-start;
-            }
-
-            .time-slot {
-                min-width: calc(50% - 4px);
-                max-width: calc(50% - 4px);
-            }
-
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .disclaimer {
-                font-size: 0.8rem;
-                padding: 10px;
-            }
-
-            .pool-actions {
-                gap: 4px;
-            }
-
-            .pool-name {
-                margin-bottom: 1px;
-            }
-
-            .pool-address {
-                margin-bottom: 2px;
-            }
-
-            .pool-distance {
-                margin-bottom: 2px;
-            }
-        }
-
         .filter-group {
             flex: 1;
-            min-width: 200px;
+            min-width: 190px;
         }
+
+        .filter-group.grow-btn { flex: 0 0 auto; min-width: 0; }
 
         .filter-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 7px;
             font-weight: 600;
-            color: #495057;
+            font-size: 0.82rem;
+            letter-spacing: 0.01em;
+            color: var(--text-muted);
         }
 
         .filter-group input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #dee2e6;
-            border-radius: 8px;
+            padding: 12px 14px;
+            border: 1.5px solid var(--border-strong);
+            border-radius: var(--radius-sm);
             font-size: 16px;
-            transition: border-color 0.3s;
+            font-family: inherit;
+            color: var(--text);
+            background: var(--surface);
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
         .filter-group input:focus {
             outline: none;
-            border-color: #4facfe;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
         }
 
         .search-btn {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
+            background: var(--accent);
+            color: #fff;
             border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            padding: 12px 28px;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 700;
+            font-family: inherit;
             cursor: pointer;
-            transition: transform 0.2s;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.15s, background 0.2s, box-shadow 0.2s;
         }
 
-        .search-btn:hover {
-            transform: translateY(-2px);
+        .search-btn:hover:not(:disabled) {
+            background: var(--accent-strong);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
-        .search-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .search-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .location-btn {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
+            background: var(--surface);
+            color: var(--text);
+            border: 1.5px solid var(--border-strong);
+            padding: 12px 18px;
+            border-radius: var(--radius-sm);
             font-size: 14px;
             font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
-            transition: transform 0.2s, background 0.3s;
+            white-space: nowrap;
+            transition: transform 0.15s, background 0.2s, border-color 0.2s, color 0.2s;
         }
 
-        .location-btn:hover {
-            transform: translateY(-2px);
+        .location-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            border-color: var(--accent);
+            color: var(--accent-strong);
         }
 
-        .location-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .location-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .location-btn.active {
-            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent-strong);
         }
 
-        /* Second filter row: length + type chip filters */
+        /* Secondary filter row: type chip filters */
         .filter-row-secondary {
             display: flex;
             gap: 28px;
-            align-items: flex-start;
+            align-items: center;
             flex-wrap: wrap;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e9ecef;
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
         }
 
         .chip-group {
             display: flex;
-            flex-direction: column;
-            gap: 8px;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .chip-group > label {
             font-weight: 600;
-            color: #495057;
-            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-size: 0.82rem;
         }
 
-        .chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
         .chip {
-            background: #fff;
-            border: 1px solid #dee2e6;
-            color: #1C2B2A;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 0.9rem;
+            background: var(--surface);
+            border: 1.5px solid var(--border-strong);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 0.88rem;
             font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
-            min-height: 40px;
-            transition: transform 0.15s, box-shadow 0.15s;
+            min-height: 38px;
+            transition: transform 0.15s, background 0.2s, border-color 0.2s, color 0.2s;
         }
 
-        .chip:hover {
-            transform: translateY(-1px);
-        }
+        .chip:hover { transform: translateY(-1px); border-color: var(--accent); }
 
         .chip:focus-visible {
-            outline: 3px solid #4facfe;
-            outline-offset: 2px;
-        }
-
-        .chip.active {
-            color: #fff;
-            border-color: transparent;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            outline: 3px solid var(--accent-soft);
+            outline-offset: 1px;
+            border-color: var(--accent);
         }
 
         .chip.active.chip-type {
-            background: #1C2B2A;
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
         }
 
         .clear-filter-btn {
-            background: #4facfe;
-            color: white;
+            background: var(--accent);
+            color: #fff;
             border: none;
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             font-size: 0.9rem;
             font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
-            margin-top: 12px;
+            margin-top: 14px;
         }
 
-        .results {
-            padding: 30px;
-        }
+        .clear-filter-btn:hover { background: var(--accent-strong); }
+
+        .results { padding: 24px 28px 30px; }
 
         .loading {
             text-align: center;
-            padding: 40px;
-            color: #6c757d;
+            padding: 20px 20px 8px;
+            color: var(--text-muted);
         }
 
+        .loading h3 { font-weight: 600; font-size: 1.05rem; margin-bottom: 4px; }
+
+        /* Skeleton placeholders */
+        .skeleton-list { margin-top: 16px; }
+        .skeleton-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .skeleton-row:last-child { border-bottom: none; }
+        .sk {
+            background: linear-gradient(90deg, var(--surface-3) 25%, var(--surface-2) 50%, var(--surface-3) 75%);
+            background-size: 200% 100%;
+            animation: sk 1.3s ease-in-out infinite;
+            border-radius: 6px;
+        }
+        @keyframes sk { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .sk-title { width: 190px; height: 15px; }
+        .sk-sub { width: 130px; height: 11px; margin-top: 8px; }
+        .sk-info { flex: 0 0 260px; }
+        .sk-chips { flex: 1; display: flex; gap: 8px; }
+        .sk-chip { width: 130px; height: 40px; border-radius: 10px; }
+
         .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            border: 1px solid var(--danger-border);
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
             margin-bottom: 20px;
+            font-size: 0.92rem;
         }
 
         .results-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .results-header h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
         }
 
         .results-count {
-            color: #6c757d;
-            font-weight: 600;
+            color: var(--accent-strong);
+            font-weight: 700;
+            font-size: 0.9rem;
+            background: var(--accent-soft);
+            padding: 5px 12px;
+            border-radius: 999px;
         }
 
         .pool-table {
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             overflow: hidden;
-            margin-bottom: 20px;
         }
 
         .pool-row {
             display: flex;
             align-items: center;
-            padding: 12px 16px;
-            border-bottom: 1px solid #f1f3f4;
-            transition: background-color 0.2s;
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.15s;
         }
 
-        .pool-row:hover {
-            background-color: #f8f9fa;
-        }
-
-        .pool-row:last-child {
-            border-bottom: none;
-        }
+        .pool-row:hover { background-color: var(--surface-2); }
+        .pool-row:last-child { border-bottom: none; }
 
         .pool-info {
-            flex: 0 0 280px;
+            flex: 0 0 268px;
             margin-right: 20px;
         }
 
         .pool-name {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #007bff;
-            margin-bottom: 2px;
+            font-size: 1.02rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.01em;
             text-decoration: none;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        .pool-name:hover {
-            text-decoration: underline;
+        a.pool-name:hover { color: var(--accent-strong); text-decoration: underline; }
+        a.pool-name::after { content: '↗'; font-size: 0.72em; color: var(--text-faint); }
+        a.pool-name:hover::after { color: var(--accent); }
+
+        .pool-meta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 6px 0 8px;
         }
 
         .pool-address {
-            font-size: 0.8rem;
-            color: #6c757d;
-            margin-bottom: 4px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
         }
 
-        .pool-distance {
-            font-size: 0.75rem;
-            color: #28a745;
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 0.72rem;
             font-weight: 600;
-            margin-bottom: 4px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            white-space: nowrap;
         }
 
-        .pool-actions {
-            display: flex;
-            gap: 8px;
-        }
+        .badge-type { background: var(--surface-3); color: var(--text-muted); }
+        .badge-distance { background: var(--accent-soft); color: var(--accent-strong); }
+
+        .pool-actions { display: flex; gap: 8px; }
 
         .directions-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
+            background: var(--surface);
+            color: var(--accent-strong);
+            border: 1.5px solid var(--border-strong);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 600;
             cursor: pointer;
             text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.2s, border-color 0.2s;
         }
 
-        .directions-btn:hover {
-            background: #218838;
-        }
+        .directions-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
 
         .time-slots {
             flex: 1;
@@ -448,36 +552,83 @@
         }
 
         .time-slot {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 6px 10px;
-            border-radius: 6px;
-            text-align: center;
-            position: relative;
-            font-size: 0.85rem;
-            min-width: 140px;
+            background: var(--accent-softer);
+            border: 1px solid var(--accent-soft);
+            color: var(--text);
+            padding: 7px 12px;
+            border-radius: 10px;
+            text-align: left;
+            min-width: 132px;
+            transition: transform 0.12s, border-color 0.2s;
         }
 
+        .time-slot:hover { border-color: var(--accent); transform: translateY(-1px); }
+
         .time-range {
-            font-weight: 600;
-            font-size: 0.9rem;
+            font-weight: 700;
+            font-size: 0.86rem;
+            color: var(--accent-strong);
+            letter-spacing: -0.01em;
         }
 
         .time-date {
-            font-size: 0.75rem;
-            opacity: 0.8;
+            font-size: 0.72rem;
+            color: var(--text-muted);
             margin-top: 2px;
         }
 
         .no-results {
             text-align: center;
-            padding: 60px 20px;
-            color: #6c757d;
+            padding: 56px 20px;
+            color: var(--text-muted);
         }
 
-        .no-results h3 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
+        .no-results .nr-icon { font-size: 2.6rem; line-height: 1; margin-bottom: 12px; }
+        .no-results h3 { font-size: 1.35rem; margin-bottom: 8px; color: var(--text); font-weight: 700; }
+        .no-results p { font-size: 0.95rem; }
+
+        @media (max-width: 768px) {
+            body { padding: 12px 10px 32px; }
+
+            .header { padding: 26px 20px 22px; }
+            .header h1 { font-size: 1.9rem; }
+            .header p { font-size: 0.95rem; }
+            .disclaimer { font-size: 0.8rem; padding: 10px 12px; }
+
+            .filters { padding: 18px 16px; }
+
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 14px;
+            }
+
+            .filter-group, .filter-group.grow-btn { min-width: auto; }
+            .search-btn, .location-btn { width: 100%; }
+
+            .filter-row-secondary { gap: 16px; }
+
+            .results { padding: 18px 14px 24px; }
+
+            .pool-row {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 14px;
+                gap: 10px;
+            }
+
+            .pool-info {
+                flex: 0 0 auto !important;
+                margin-right: 0;
+                width: 100%;
+            }
+
+            .time-slots { width: 100%; }
+
+            .time-slot {
+                flex: 1 1 calc(50% - 4px);
+                min-width: calc(50% - 4px);
+            }
         }
     </style>
 </head>
@@ -498,6 +649,17 @@
             </div>
 
             <div class="filters">
+                <div class="quick-dates" role="group" aria-label="Quick date range">
+                    <span class="qd-label">Quick pick:</span>
+                    <button type="button" class="quick-btn"
+                            :class="{ active: activeQuickRange === 'today' }"
+                            :aria-pressed="activeQuickRange === 'today'"
+                            @click="setQuickRange('today')">Today</button>
+                    <button type="button" class="quick-btn"
+                            :class="{ active: activeQuickRange === 'tomorrow' }"
+                            :aria-pressed="activeQuickRange === 'tomorrow'"
+                            @click="setQuickRange('tomorrow')">Tomorrow</button>
+                </div>
                 <div class="filter-row">
                     <div class="filter-group">
                         <label for="startDate">Start Date & Time</label>
@@ -517,23 +679,23 @@
                             step="3600"
                         />
                     </div>
-                    <div class="filter-group">
+                    <div class="filter-group grow-btn">
                         <button
                             class="search-btn"
                             @click="searchPools"
                             :disabled="loading"
                         >
-                            {{ loading ? 'Searching...' : 'Find Pools' }}
+                            {{ loading ? 'Searching…' : '🔍 Find Pools' }}
                         </button>
                     </div>
-                    <div class="filter-group">
+                    <div class="filter-group grow-btn">
                         <button
                             class="location-btn"
                             @click="toggleLocationSorting"
                             :disabled="locationLoading"
                             :class="{ 'active': sortByDistance }"
                         >
-                            {{ locationLoading ? '🔄 Getting Location...' : (sortByDistance ? '📍 Distance: ON' : '📍 Sort by Distance') }}
+                            {{ locationLoading ? '🔄 Getting location…' : (sortByDistance ? '📍 Nearest first · ON' : '📍 Sort by distance') }}
                         </button>
                     </div>
                 </div>
@@ -561,30 +723,42 @@
                 </div>
 
                 <div v-if="loading" class="loading">
-                    <h3>🏊‍♂️ Searching for available lanes...</h3>
+                    <h3>🏊 Searching for available lanes…</h3>
+                    <div class="skeleton-list">
+                        <div class="skeleton-row" v-for="n in 4" :key="n">
+                            <div class="sk-info">
+                                <div class="sk sk-title"></div>
+                                <div class="sk sk-sub"></div>
+                            </div>
+                            <div class="sk-chips">
+                                <div class="sk sk-chip"></div>
+                                <div class="sk sk-chip"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div v-if="!loading && filteredPools.length > 0">
                     <div class="results-header">
-                        <h2>Available Pools</h2>
-                        <span class="results-count" aria-live="polite">{{ filteredPools.length }} pools found</span>
+                        <h2>Available pools</h2>
+                        <span class="results-count" aria-live="polite">{{ filteredPools.length }} pool{{ filteredPools.length === 1 ? '' : 's' }} found</span>
                     </div>
 
                     <div class="pool-table">
                         <div class="pool-row" v-for="pool in filteredPools" :key="pool.pool_name">
                             <div class="pool-info">
-                                <a :href="pool.website" target="_blank" class="pool-name" v-if="pool.website">
+                                <a :href="pool.website" target="_blank" rel="noopener" class="pool-name" v-if="pool.website">
                                     {{ pool.pool_name }}
                                 </a>
                                 <div class="pool-name" v-else>{{ pool.pool_name }}</div>
-                                <div class="pool-address" v-if="pool.address">
-                                    {{ pool.address }}
-                                    <span v-if="pool.pool_type"> · {{ pool.pool_type === 'Outdoor' ? '☀️ Outdoor' : '🏠 Indoor' }}</span>
+                                <div class="pool-meta">
+                                    <span class="pool-address" v-if="pool.address">{{ pool.address }}</span>
+                                    <span class="badge badge-type" v-if="pool.pool_type">{{ pool.pool_type === 'Outdoor' ? '☀️ Outdoor' : '🏠 Indoor' }}</span>
+                                    <span class="badge badge-distance" v-if="pool.distance">📍 {{ pool.distance }}</span>
                                 </div>
-                                <div class="pool-distance" v-if="pool.distance">{{ pool.distance }} away</div>
                                 <div class="pool-actions">
-                                    <a :href="getDirectionsUrl(pool.coordinates)" target="_blank" class="directions-btn" v-if="pool.coordinates.x && pool.coordinates.y">
-                                        📍 Directions
+                                    <a :href="getDirectionsUrl(pool.coordinates)" target="_blank" rel="noopener" class="directions-btn" v-if="pool.coordinates.x && pool.coordinates.y">
+                                        🧭 Directions
                                     </a>
                                 </div>
                             </div>
@@ -593,7 +767,7 @@
                                      v-for="time in pool.times"
                                      :key="time.start_time">
                                     <div class="time-range">
-                                        {{ formatTime(time.start_time) }} - {{ formatTime(time.end_time) }}
+                                        {{ formatTime(time.start_time) }} – {{ formatTime(time.end_time) }}
                                     </div>
                                     <div class="time-date">
                                         {{ formatDate(time.start_time) }}
@@ -605,19 +779,22 @@
                 </div>
 
                 <div v-if="!loading && pools.length > 0 && filteredPools.length === 0" class="no-results">
+                    <div class="nr-icon">🔎</div>
                     <h3>No pools match this filter</h3>
                     <p>No {{ selectedTypes.join('/') }} pools have lane swims in this time range.</p>
                     <button class="clear-filter-btn" @click="clearChipFilters">Show all pools</button>
                 </div>
 
                 <div v-if="!loading && searched && pools.length === 0" class="no-results">
+                    <div class="nr-icon">🦆</div>
                     <h3>No pools found</h3>
-                    <p>Try adjusting your date and time range</p>
+                    <p>Try widening your date and time range.</p>
                 </div>
 
                 <div v-if="!loading && !searched" class="no-results">
+                    <div class="nr-icon">🏊</div>
                     <h3>Ready to find your perfect swim time?</h3>
-                    <p>Select a date range above and click "Find Pools"</p>
+                    <p>Select a date range above and tap “Find Pools”.</p>
                 </div>
             </div>
         </div>
@@ -649,6 +826,23 @@
                     return this.pools.filter(
                         pool => this.selectedTypes.length === 0 || this.selectedTypes.includes(pool.pool_type)
                     );
+                },
+                activeQuickRange() {
+                    // Highlight the "Today"/"Tomorrow" quick-pick when the current
+                    // range exactly matches that day's default 6 AM–11 PM window.
+                    if (!this.startDate || !this.endDate) return null;
+                    const now = new Date();
+                    const dayRange = (offset) => {
+                        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+                        const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 6, 0);
+                        const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 0);
+                        return { start: this.formatDateTimeLocal(start), end: this.formatDateTimeLocal(end) };
+                    };
+                    const today = dayRange(0);
+                    if (this.startDate === today.start && this.endDate === today.end) return 'today';
+                    const tomorrow = dayRange(1);
+                    if (this.startDate === tomorrow.start && this.endDate === tomorrow.end) return 'tomorrow';
+                    return null;
                 }
             },
             mounted() {
@@ -740,6 +934,19 @@
                     } finally {
                         this.loading = false;
                     }
+                },
+
+                setQuickRange(which) {
+                    // Set the range to a whole day (6 AM–11 PM), matching the app's
+                    // default window logic, then run a search.
+                    const now = new Date();
+                    const offset = which === 'tomorrow' ? 1 : 0;
+                    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+                    const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 6, 0);
+                    const end = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 23, 0);
+                    this.startDate = this.formatDateTimeLocal(start);
+                    this.endDate = this.formatDateTimeLocal(end);
+                    this.searchPools();
                 },
 
                 updateUrlParams() {
