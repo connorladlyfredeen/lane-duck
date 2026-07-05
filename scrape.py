@@ -153,6 +153,21 @@ def convert_to_new_format(obj, week_offset=0, swim_type_title=None):
     }
 
 
+# Lane-swim titles that are demographic/age-restricted and intentionally NOT
+# counted as general lane swims (matches the app's existing scope: no women's-only,
+# men's-only, or 65+ sessions).
+EXCLUDED_LANE_SWIM_QUALIFIERS = ('(women)', '(men)', 'older adult', 'adapted')
+
+def is_general_lane_swim(title: str) -> bool:
+    """True for open lane-swim sessions. Accepts plain "Lane Swim", course
+    variants ("... Long Course (50m)"), venue-named variants
+    ("Lane Swim (Giovanni Caboto)") and "Quiet (No Music)"; excludes the
+    demographic/age-restricted variants above."""
+    if not title or not title.startswith('Lane Swim'):
+        return False
+    lowered = title.lower()
+    return not any(q in lowered for q in EXCLUDED_LANE_SWIM_QUALIFIERS)
+
 def process_swim_data(raw_swim_data: dict, week_offset=0) -> dict:
     swim_data_objs = [program["days"] for program in raw_swim_data['programs'] if program['program'] == 'Swim - Drop-In']
     if len(swim_data_objs) == 0:
@@ -162,7 +177,7 @@ def process_swim_data(raw_swim_data: dict, week_offset=0) -> dict:
     swim_data_objs = swim_data_objs[0]
     flattened_swim_sessions = []
     for swim_data_obj in swim_data_objs:
-        if swim_data_obj['title'] in {'Lane Swim', 'Lane Swim: Long Course (50m)', 'Lane Swim: Short Course (25m)'} and swim_data_obj['status'] == 'active':
+        if is_general_lane_swim(swim_data_obj['title']) and swim_data_obj['status'] == 'active':
             filtered_sessions = [session for session in swim_data_obj['times'] if session['status'] == 'active']
             swim_type_title = swim_data_obj['title']
             flattened_swim_sessions.extend([convert_to_new_format(session, week_offset, swim_type_title) for session in filtered_sessions])
