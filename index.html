@@ -262,6 +262,94 @@
             background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
         }
 
+        /* Second filter row: length + type chip filters */
+        .filter-row-secondary {
+            display: flex;
+            gap: 28px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .chip-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .chip-group > label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.95rem;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            color: #1C2B2A;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 40px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .chip:hover {
+            transform: translateY(-1px);
+        }
+
+        .chip:focus-visible {
+            outline: 3px solid #4facfe;
+            outline-offset: 2px;
+        }
+
+        /* Active length chips take on their length color so the filter doubles
+           as a color key for the time-slots below. */
+        .chip.active {
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .chip.active.chip-25m {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .chip.active.chip-50m {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: #1C2B2A;
+        }
+
+        .chip.active.chip-unknown {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .chip.active.chip-type {
+            background: #1C2B2A;
+        }
+
+        .clear-filter-btn {
+            background: #4facfe;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
         .results {
             padding: 30px;
         }
@@ -385,12 +473,22 @@
             min-width: 140px;
         }
 
-        .time-slot.length-25m {
+        .time-slot.length-25m,
+        .time-slot.length-25y {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
 
-        .time-slot.length-50m {
+        .time-slot.length-50m,
+        .time-slot.length-50y {
+            /* Pink/yellow gradient is light at the yellow end, so use dark ink
+               text here for legibility (white fails contrast). */
             background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: #1C2B2A;
+        }
+
+        .time-slot.length-50m .pool-length,
+        .time-slot.length-50y .pool-length {
+            background: rgba(0, 0, 0, 0.12);
         }
 
         .time-range {
@@ -405,14 +503,14 @@
         }
 
         .pool-length {
-            position: absolute;
-            top: 2px;
-            right: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1px 4px;
+            display: inline-block;
+            margin-top: 4px;
+            background: rgba(255, 255, 255, 0.25);
+            padding: 1px 6px;
             border-radius: 3px;
-            font-size: 0.6rem;
+            font-size: 0.62rem;
             font-weight: 600;
+            letter-spacing: 0.02em;
         }
 
         .no-results {
@@ -483,6 +581,40 @@
                         </button>
                     </div>
                 </div>
+
+                <div class="filter-row-secondary">
+                    <div class="chip-group" role="group" aria-label="Filter by pool length">
+                        <label>Length: {{ selectedLengths.length ? selectedLengths.map(lengthLabel).join(', ') : 'Any' }}</label>
+                        <div class="chips">
+                            <button type="button" class="chip chip-25m"
+                                    :class="{ active: selectedLengths.includes('25') }"
+                                    :aria-pressed="selectedLengths.includes('25')"
+                                    @click="toggleLength('25')">25m</button>
+                            <button type="button" class="chip chip-50m"
+                                    :class="{ active: selectedLengths.includes('50') }"
+                                    :aria-pressed="selectedLengths.includes('50')"
+                                    @click="toggleLength('50')">50m</button>
+                            <button type="button" class="chip chip-unknown"
+                                    :class="{ active: selectedLengths.includes('unknown') }"
+                                    :aria-pressed="selectedLengths.includes('unknown')"
+                                    @click="toggleLength('unknown')">Unknown</button>
+                        </div>
+                    </div>
+
+                    <div class="chip-group" role="group" aria-label="Filter by pool type">
+                        <label>Type: {{ selectedTypes.length ? selectedTypes.join(', ') : 'All' }}</label>
+                        <div class="chips">
+                            <button type="button" class="chip chip-type"
+                                    :class="{ active: selectedTypes.includes('Indoor') }"
+                                    :aria-pressed="selectedTypes.includes('Indoor')"
+                                    @click="toggleType('Indoor')">Indoor</button>
+                            <button type="button" class="chip chip-type"
+                                    :class="{ active: selectedTypes.includes('Outdoor') }"
+                                    :aria-pressed="selectedTypes.includes('Outdoor')"
+                                    @click="toggleType('Outdoor')">Outdoor</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="results">
@@ -494,10 +626,10 @@
                     <h3>🏊‍♂️ Searching for available lanes...</h3>
                 </div>
 
-                <div v-if="!loading && pools.length > 0">
+                <div v-if="!loading && filteredPools.length > 0">
                     <div class="results-header">
                         <h2>Available Pools</h2>
-                        <span class="results-count">{{ pools.length }} pools found</span>
+                        <span class="results-count" aria-live="polite">{{ filteredPools.length }} pools found</span>
                     </div>
 
                     <div class="pool-legend" style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center; font-size: 0.9rem;">
@@ -517,13 +649,16 @@
                     </div>
 
                     <div class="pool-table">
-                        <div class="pool-row" v-for="pool in pools" :key="pool.pool_name">
+                        <div class="pool-row" v-for="pool in filteredPools" :key="pool.pool_name">
                             <div class="pool-info">
                                 <a :href="pool.website" target="_blank" class="pool-name" v-if="pool.website">
                                     {{ pool.pool_name }}
                                 </a>
                                 <div class="pool-name" v-else>{{ pool.pool_name }}</div>
-                                <div class="pool-address" v-if="pool.address">{{ pool.address }}</div>
+                                <div class="pool-address" v-if="pool.address">
+                                    {{ pool.address }}
+                                    <span v-if="pool.pool_type"> · {{ pool.pool_type === 'Outdoor' ? '☀️ Outdoor' : '🏠 Indoor' }}</span>
+                                </div>
                                 <div class="pool-distance" v-if="pool.distance">{{ pool.distance }} away</div>
                                 <div class="pool-actions">
                                     <a :href="getDirectionsUrl(pool.coordinates)" target="_blank" class="directions-btn" v-if="pool.coordinates.x && pool.coordinates.y">
@@ -535,20 +670,26 @@
                                 <div class="time-slot"
                                      :class="'length-' + (time.pool_length || 'unknown').toLowerCase()"
                                      v-for="time in pool.times"
-                                     :key="time.start_time">
-                                    <div class="pool-length" v-if="time.pool_length && time.pool_length !== 'Unknown'">
-                                        {{ time.pool_length }}
-                                    </div>
+                                     :key="time.start_time + '-' + (time.pool_length || 'u')">
                                     <div class="time-range">
                                         {{ formatTime(time.start_time) }} - {{ formatTime(time.end_time) }}
                                     </div>
                                     <div class="time-date">
                                         {{ formatDate(time.start_time) }}
                                     </div>
+                                    <div class="pool-length">
+                                        {{ time.pool_length && time.pool_length !== 'Unknown' ? time.pool_length : 'Length N/A' }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <div v-if="!loading && pools.length > 0 && filteredPools.length === 0" class="no-results">
+                    <h3>No pools match these filters</h3>
+                    <p>No lane swims match your selected length/type in this time range.</p>
+                    <button class="clear-filter-btn" @click="clearChipFilters">Show all lengths &amp; types</button>
                 </div>
 
                 <div v-if="!loading && searched && pools.length === 0" class="no-results">
@@ -580,8 +721,27 @@
                     userLocation: null,
                     locationPermission: 'unknown', // 'unknown', 'granted', 'denied'
                     sortByDistance: false,
-                    locationLoading: false
+                    locationLoading: false,
+                    selectedLengths: [], // buckets: '25', '50', 'unknown' (empty = Any)
+                    selectedTypes: []    // 'Indoor', 'Outdoor' (empty = All)
                 };
+            },
+            computed: {
+                filteredPools() {
+                    return this.pools
+                        // Type filter: whole-pool. Empty selection = all types.
+                        .filter(pool => this.selectedTypes.length === 0 || this.selectedTypes.includes(pool.pool_type))
+                        // Length filter: slot-level. Empty selection = any length.
+                        .map(pool => {
+                            if (this.selectedLengths.length === 0) return pool;
+                            const times = (pool.times || []).filter(
+                                t => this.selectedLengths.includes(this.lengthBucket(t.pool_length))
+                            );
+                            return { ...pool, times };
+                        })
+                        // Drop pools left with no matching slots.
+                        .filter(pool => pool.times && pool.times.length > 0);
+                }
             },
             mounted() {
                 // Check URL parameters first
@@ -602,6 +762,9 @@
                     this.startDate = this.formatDateTimeLocal(startTime);
                     this.endDate = this.formatDateTimeLocal(endTime);
                 }
+
+                // Restore saved location-sorting preference before the initial search
+                this.loadLocationPrefs();
 
                 // Auto-search after setting default dates
                 this.searchPools();
@@ -723,11 +886,95 @@
                     return '#';
                 },
 
+                loadLocationPrefs() {
+                    // Restore the user's saved preferences (distance sorting, last known
+                    // location, and length/type filters) so choices persist across visits.
+                    try {
+                        const savedPref = localStorage.getItem('laneduck_sortByDistance') === 'true';
+                        const savedLocation = localStorage.getItem('laneduck_userLocation');
+                        if (savedLocation) {
+                            this.userLocation = JSON.parse(savedLocation);
+                        }
+                        // Only re-enable sorting if we also have a cached location to sort by;
+                        // otherwise the toggle would be "on" but do nothing until permission is granted.
+                        if (savedPref && this.userLocation) {
+                            this.sortByDistance = true;
+                        }
+                        const savedLengths = localStorage.getItem('laneduck_selectedLengths');
+                        const savedTypes = localStorage.getItem('laneduck_selectedTypes');
+                        if (savedLengths) this.selectedLengths = JSON.parse(savedLengths);
+                        if (savedTypes) this.selectedTypes = JSON.parse(savedTypes);
+                    } catch (e) {
+                        // Corrupt/blocked storage — fall back to defaults silently.
+                    }
+                },
+
+                saveLocationPrefs() {
+                    try {
+                        localStorage.setItem('laneduck_sortByDistance', this.sortByDistance ? 'true' : 'false');
+                        if (this.userLocation) {
+                            localStorage.setItem('laneduck_userLocation', JSON.stringify(this.userLocation));
+                        }
+                    } catch (e) {
+                        // Storage unavailable (e.g. private mode) — non-fatal.
+                    }
+                },
+
+                saveChipFilters() {
+                    try {
+                        localStorage.setItem('laneduck_selectedLengths', JSON.stringify(this.selectedLengths));
+                        localStorage.setItem('laneduck_selectedTypes', JSON.stringify(this.selectedTypes));
+                    } catch (e) {
+                        // Storage unavailable — non-fatal.
+                    }
+                },
+
+                lengthBucket(poolLength) {
+                    // Collapse metric/yard lengths into a distance bucket: 25m/25y -> '25',
+                    // 50m/50y -> '50', everything else -> 'unknown'.
+                    if (!poolLength) return 'unknown';
+                    const match = String(poolLength).match(/^(\d+)/);
+                    if (match && match[1] === '25') return '25';
+                    if (match && match[1] === '50') return '50';
+                    return 'unknown';
+                },
+
+                lengthLabel(bucket) {
+                    return { '25': '25m', '50': '50m', 'unknown': 'Unknown' }[bucket] || bucket;
+                },
+
+                toggleLength(bucket) {
+                    const i = this.selectedLengths.indexOf(bucket);
+                    if (i === -1) {
+                        this.selectedLengths.push(bucket);
+                    } else {
+                        this.selectedLengths.splice(i, 1);
+                    }
+                    this.saveChipFilters();
+                },
+
+                toggleType(type) {
+                    const i = this.selectedTypes.indexOf(type);
+                    if (i === -1) {
+                        this.selectedTypes.push(type);
+                    } else {
+                        this.selectedTypes.splice(i, 1);
+                    }
+                    this.saveChipFilters();
+                },
+
+                clearChipFilters() {
+                    this.selectedLengths = [];
+                    this.selectedTypes = [];
+                    this.saveChipFilters();
+                },
+
                 async toggleLocationSorting() {
                     if (this.sortByDistance) {
                         // Turn off distance sorting
                         this.sortByDistance = false;
                         this.clearDistances();
+                        this.saveLocationPrefs();
                         return;
                     }
 
@@ -736,6 +983,7 @@
 
                     if (this.userLocation) {
                         this.sortByDistance = true;
+                        this.saveLocationPrefs();
                         // Re-run search with current timestamps to get fresh data with distance sorting
                         if (this.startDate && this.endDate) {
                             this.searchPools();
