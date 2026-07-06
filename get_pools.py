@@ -43,6 +43,13 @@ import json
 import os
 import yaml
 
+# Observability: load secrets from .env and start Sentry if configured.
+# No-op (never raises) when SENTRY_DSN is unset or sentry_sdk is not installed,
+# so the API keeps running regardless.
+import obs
+obs.load_dotenv()
+obs.init_sentry(environment="production")
+
 app = FastAPI()
 
 # Add CORS middleware to allow browser requests
