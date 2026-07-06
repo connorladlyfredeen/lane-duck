@@ -319,6 +319,14 @@ def main():
 
     logger.info(f"Data cleanup completed. Final pool count: {len(pool_data)}")
 
+    # Regenerate the static, crawlable pool-schedule page for SEO (see prerender.py).
+    # Non-fatal: a prerender failure must not fail the scrape.
+    try:
+        import prerender
+        prerender.build()
+    except Exception as e:
+        logger.error(f"Prerender failed (non-fatal): {e}")
+
     # Log completion timestamp
     log_scrape_completion()
 
