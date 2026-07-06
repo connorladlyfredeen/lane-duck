@@ -90,6 +90,21 @@ def fetch_with_retries(url, max_retries=3, backoff_factor=2):
 
 from datetime import datetime, timedelta
 
+
+def now_toronto():
+    """Current date/time in Toronto. The pools and users are all in Toronto, so
+    the "current week" must be anchored to Toronto's calendar, not the server's
+    UTC clock — otherwise, when the server (UTC) crosses midnight into a new week
+    before Toronto does (e.g. Sunday ~8pm-midnight ET), the scraper drops the day
+    users still consider "today" and the site shows no pools for it."""
+    try:
+        import pytz
+        return datetime.now(pytz.timezone("America/Toronto"))
+    except Exception:
+        # Fallback: naive local time (fine for local dev machines set to ET).
+        return datetime.now()
+
+
 def convert_to_new_format(obj, week_offset=0, swim_type_title=None):
     """
     Converts the input dictionary into the specified format.
@@ -113,8 +128,8 @@ def convert_to_new_format(obj, week_offset=0, swim_type_title=None):
         "sunday": 6
     }
 
-    # Get the current date and calculate the start of the week (Monday)
-    today = datetime.now()
+    # Get the current date (Toronto time) and calculate the start of the week (Monday)
+    today = now_toronto()
     start_of_week = today - timedelta(days=today.weekday())  # Monday of the current week
 
     # Add week offset for next week data

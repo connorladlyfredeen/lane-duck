@@ -36,7 +36,13 @@ def build(cache_file=CACHE_FILE, output_file=OUTPUT_FILE):
     with open(cache_file, "r", encoding="utf-8") as f:
         pools = json.load(f)
 
-    now = datetime.now()
+    # Toronto wall-clock time (naive) so "already finished" is judged in the
+    # pools' local timezone, matching the naive datetimes stored in the cache.
+    try:
+        from scrape import now_toronto
+        now = now_toronto().replace(tzinfo=None)
+    except Exception:
+        now = datetime.now()
     pools = sorted(pools, key=lambda p: p.get("complexname", ""))
 
     pool_sections = []
