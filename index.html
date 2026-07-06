@@ -818,9 +818,21 @@
                             :aria-pressed="activeQuickRange === 'today'"
                             @click="setQuickRange('today')">Today</button>
                     <button type="button" class="quick-btn"
+                            :class="{ active: activeQuickRange === 'evening' }"
+                            :aria-pressed="activeQuickRange === 'evening'"
+                            @click="setQuickRange('evening')">This evening</button>
+                    <button type="button" class="quick-btn"
                             :class="{ active: activeQuickRange === 'tomorrow' }"
                             :aria-pressed="activeQuickRange === 'tomorrow'"
                             @click="setQuickRange('tomorrow')">Tomorrow</button>
+                    <button type="button" class="quick-btn"
+                            :class="{ active: activeQuickRange === 'tomorrow-am' }"
+                            :aria-pressed="activeQuickRange === 'tomorrow-am'"
+                            @click="setQuickRange('tomorrow-am')">Tomorrow before work</button>
+                    <button type="button" class="quick-btn"
+                            :class="{ active: activeQuickRange === 'tomorrow-day' }"
+                            :aria-pressed="activeQuickRange === 'tomorrow-day'"
+                            @click="setQuickRange('tomorrow-day')">Tomorrow 8–5</button>
                 </div>
                 <div class="filter-row">
                     <div class="filter-group">
@@ -1027,7 +1039,15 @@
                     locationPermission: 'unknown', // 'unknown', 'granted', 'denied'
                     sortByDistance: false,
                     locationLoading: false,
-                    selectedTypes: []    // 'Indoor', 'Outdoor' (empty = All)
+                    selectedTypes: [],   // 'Indoor', 'Outdoor' (empty = All)
+                    // Quick-pick presets: key -> [dayOffset, startHour, endHour]
+                    quickPresets: {
+                        'today':        [0, 6, 23],   // whole day
+                        'evening':      [0, 17, 23],  // this evening, after 5
+                        'tomorrow':     [1, 6, 23],   // whole day
+                        'tomorrow-am':  [1, 6, 9],    // tomorrow before work
+                        'tomorrow-day': [1, 8, 17]    // tomorrow during the day (8–5)
+                    }
                 };
             },
             computed: {
@@ -1038,20 +1058,12 @@
                     );
                 },
                 activeQuickRange() {
-                    // Highlight the "Today"/"Tomorrow" quick-pick when the current
-                    // range exactly matches that day's default 6 AM–11 PM window.
+                    // Highlight whichever quick-pick exactly matches the current range.
                     if (!this.startDate || !this.endDate) return null;
-                    const now = new Date();
-                    const dayRange = (offset) => {
-                        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
-                        const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 6, 0);
-                        const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 0);
-                        return { start: this.formatDateTimeLocal(start), end: this.formatDateTimeLocal(end) };
-                    };
-                    const today = dayRange(0);
-                    if (this.startDate === today.start && this.endDate === today.end) return 'today';
-                    const tomorrow = dayRange(1);
-                    if (this.startDate === tomorrow.start && this.endDate === tomorrow.end) return 'tomorrow';
+                    for (const key of Object.keys(this.quickPresets)) {
+                        const r = this.quickRangeFor(key);
+                        if (this.startDate === r.start && this.endDate === r.end) return key;
+                    }
                     return null;
                 }
             },
@@ -1146,16 +1158,21 @@
                     }
                 },
 
-                setQuickRange(which) {
-                    // Set the range to a whole day (6 AM–11 PM), matching the app's
-                    // default window logic, then run a search.
+                quickRangeFor(key) {
+                    // Compute the {start, end} datetime-local strings for a preset.
+                    const [offset, startHour, endHour] = this.quickPresets[key];
                     const now = new Date();
-                    const offset = which === 'tomorrow' ? 1 : 0;
-                    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
-                    const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 6, 0);
-                    const end = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 23, 0);
-                    this.startDate = this.formatDateTimeLocal(start);
-                    this.endDate = this.formatDateTimeLocal(end);
+                    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+                    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), startHour, 0);
+                    const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), endHour, 0);
+                    return { start: this.formatDateTimeLocal(start), end: this.formatDateTimeLocal(end) };
+                },
+
+                setQuickRange(which) {
+                    // Apply a quick-pick preset's date/time window, then search.
+                    const r = this.quickRangeFor(which);
+                    this.startDate = r.start;
+                    this.endDate = r.end;
                     this.searchPools();
                 },
 
