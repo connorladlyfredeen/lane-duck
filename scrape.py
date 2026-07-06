@@ -96,13 +96,13 @@ def now_toronto():
     the "current week" must be anchored to Toronto's calendar, not the server's
     UTC clock — otherwise, when the server (UTC) crosses midnight into a new week
     before Toronto does (e.g. Sunday ~8pm-midnight ET), the scraper drops the day
-    users still consider "today" and the site shows no pools for it."""
-    try:
-        import pytz
-        return datetime.now(pytz.timezone("America/Toronto"))
-    except Exception:
-        # Fallback: naive local time (fine for local dev machines set to ET).
-        return datetime.now()
+    users still consider "today" and the site shows no pools for it.
+
+    Deliberately does NOT fall back to naive UTC on error: silently using the
+    wrong timezone reintroduces that exact bug with no signal. pytz is pinned in
+    requirements.txt, so a missing/broken tz database should fail loudly instead."""
+    import pytz  # required dependency; see requirements.txt
+    return datetime.now(pytz.timezone("America/Toronto"))
 
 
 def convert_to_new_format(obj, week_offset=0, swim_type_title=None):
@@ -308,6 +308,23 @@ def log_scrape_completion():
 
     logger.info(f"Scrape completion logged to {log_file}")
 
+def sanity_check_current_day(pool_data):
+    """Guard against the wrong-week bug: the cache must cover today (Toronto).
+    Returns (ok, message). ok=False means the current week was likely dropped
+    (earliest session is in the future), which is exactly the "no pools today"
+    failure — something a plain success/heartbeat cannot detect."""
+    today = now_toronto().date().isoformat()
+    dates = [s.get("start_time", "")[:10]
+             for p in pool_data for s in p.get("swim_data", [])
+             if s.get("start_time")]
+    if not dates:
+        return False, "cache contains zero sessions"
+    earliest, latest = min(dates), max(dates)
+    today_count = dates.count(today)
+    ok = earliest <= today
+    return ok, (f"today={today} sessions_today={today_count} "
+                f"earliest={earliest} latest={latest} covers_today={ok}")
+
 def main():
     logger.info("Fetching fresh data from Toronto API...")
 
@@ -345,5 +362,31 @@ def main():
     # Log completion timestamp
     log_scrape_completion()
 
+    # Content sanity check: the cache must cover today (Toronto). Catches the
+    # wrong-week bug that a plain heartbeat would miss (scrape "succeeds" but
+    # drops the current week).
+    ok, msg = sanity_check_current_day(pool_data)
+    if ok:
+        logger.info(f"Sanity check passed: {msg}")
+    else:
+        logger.error(f"Sanity check FAILED: {msg}")
+    return ok
+
 if __name__ == "__main__":
-    main()
+    import sys
+    import obs
+    obs.load_dotenv()
+    obs.init_sentry(environment="production")
+    try:
+        scrape_ok = main()
+    except Exception as e:
+        obs.capture_exception(e)
+        obs.ping_healthchecks(success=False)
+        raise
+    obs.ping_healthchecks(success=bool(scrape_ok))
+    if not scrape_ok:
+        obs.capture_message(
+            "Scrape sanity check failed: cache does not cover today (Toronto)",
+            level="error",
+        )
+        sys.exit(1)

@@ -1,0 +1,11 @@
+# Pinned to the versions currently running on the production VM (connorladly-1)
+# so the environment is reproducible. Install with: pip3 install -r requirements.txt
+fastapi==0.115.12
+uvicorn==0.33.0
+requests==2.22.0
+PyYAML==5.3.1
+tqdm==4.67.1
+pytz==2019.3
+
+# Observability (optional at runtime — the app no-ops if SENTRY_DSN is unset).
+sentry-sdk[fastapi]>=2.0,<3

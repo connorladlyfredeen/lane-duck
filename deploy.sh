@@ -37,7 +37,7 @@ echo -e "${YELLOW}📦 Step 1: Uploading assets to server...${NC}"
 
 # Upload Python files
 echo "Uploading Python backend files..."
-gcloud compute scp get_pools.py scrape.py prerender.py "$SERVER:$REMOTE_DIR/" \
+gcloud compute scp get_pools.py scrape.py prerender.py obs.py "$SERVER:$REMOTE_DIR/" \
     --zone "$ZONE" --project "$PROJECT"
 
 # Upload frontend
@@ -52,7 +52,7 @@ gcloud compute scp README.md CLAUDE.md TODOS.md "$SERVER:$REMOTE_DIR/" \
 
 # Upload configuration files
 echo "Uploading configuration files..."
-gcloud compute scp .gitignore openapi.yaml sitemap.xml og-image.png "$SERVER:$REMOTE_DIR/" \
+gcloud compute scp .gitignore openapi.yaml sitemap.xml og-image.png requirements.txt .env.example "$SERVER:$REMOTE_DIR/" \
     --zone "$ZONE" --project "$PROJECT"
 
 echo -e "${GREEN}✅ Assets uploaded successfully${NC}"
