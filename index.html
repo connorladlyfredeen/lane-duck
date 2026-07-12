@@ -151,6 +151,9 @@
     </script>
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Leaflet (map view) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
             --bg-1: #e8f3f2;
@@ -546,6 +549,69 @@
             border-radius: 999px;
         }
 
+        /* Distance filter chips share the type-chip active look */
+        .chip.active.chip-distance {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        /* List / Map view toggle */
+        .results-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .view-toggle {
+            display: inline-flex;
+            gap: 4px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 3px;
+        }
+        .view-toggle button {
+            border: none;
+            background: transparent;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            min-height: 38px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .view-toggle button.active {
+            background: var(--accent);
+            color: #fff;
+        }
+        .view-toggle button:focus-visible {
+            outline: 3px solid var(--accent-soft);
+            outline-offset: 1px;
+        }
+
+        /* Map view */
+        #poolMap {
+            width: 100%;
+            height: 520px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            margin-top: 4px;
+            z-index: 0;
+        }
+        .leaflet-popup-content { font-size: 0.88rem; line-height: 1.45; margin: 12px 14px; }
+        .leaflet-popup-content .map-pool-name { font-weight: 700; font-size: 0.95rem; }
+        .leaflet-popup-content .map-pool-meta { color: #5b6b6a; }
+        .leaflet-popup-content .map-times { margin-top: 4px; }
+        .leaflet-popup-content a.map-dir { color: #12766f; font-weight: 700; text-decoration: none; }
+        .leaflet-popup-content a.map-dir:hover { text-decoration: underline; }
+        @media (max-width: 768px) {
+            #poolMap { height: 420px; }
+        }
+
         .pool-table {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -888,6 +954,20 @@
                                     @click="toggleType('Outdoor')">Outdoor</button>
                         </div>
                     </div>
+                    <div class="chip-group" v-if="sortByDistance && userLocation" role="group" aria-label="Filter by distance">
+                        <label>Within: {{ maxDistanceKm ? maxDistanceKm + ' km' : 'Any distance' }}</label>
+                        <div class="chips">
+                            <button type="button" class="chip chip-distance"
+                                    v-for="km in [2, 5, 10]" :key="km"
+                                    :class="{ active: maxDistanceKm === km }"
+                                    :aria-pressed="maxDistanceKm === km"
+                                    @click="setMaxDistance(km)">{{ km }} km</button>
+                            <button type="button" class="chip chip-distance"
+                                    :class="{ active: !maxDistanceKm }"
+                                    :aria-pressed="!maxDistanceKm"
+                                    @click="setMaxDistance(null)">Any</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -915,10 +995,20 @@
                 <div v-if="!loading && filteredPools.length > 0">
                     <div class="results-header">
                         <h2>Available pools</h2>
-                        <span class="results-count" aria-live="polite">{{ filteredPools.length }} pool{{ filteredPools.length === 1 ? '' : 's' }} found</span>
+                        <div class="results-header-actions">
+                            <span class="results-count" aria-live="polite">{{ filteredPools.length }} pool{{ filteredPools.length === 1 ? '' : 's' }} found</span>
+                            <div class="view-toggle" role="group" aria-label="Choose list or map view">
+                                <button type="button" :class="{ active: viewMode === 'list' }"
+                                        :aria-pressed="viewMode === 'list'" @click="setView('list')">📋 List</button>
+                                <button type="button" :class="{ active: viewMode === 'map' }"
+                                        :aria-pressed="viewMode === 'map'" @click="setView('map')">🗺️ Map</button>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="pool-table">
+                    <div id="poolMap" v-show="viewMode === 'map'" role="application" aria-label="Map of pools with lane swims"></div>
+
+                    <div class="pool-table" v-show="viewMode === 'list'">
                         <div class="pool-row" v-for="pool in filteredPools" :key="pool.pool_name">
                             <div class="pool-info">
                                 <a :href="pool.website" target="_blank" rel="noopener" class="pool-name" v-if="pool.website">
@@ -1039,6 +1129,8 @@
                     locationPermission: 'unknown', // 'unknown', 'granted', 'denied'
                     sortByDistance: false,
                     locationLoading: false,
+                    maxDistanceKm: null, // radius filter in km (null = any distance)
+                    viewMode: 'list',    // 'list' | 'map'
                     selectedTypes: [],   // 'Indoor', 'Outdoor' (empty = All)
                     // Quick-pick presets: key -> [dayOffset, startHour, endHour]
                     quickPresets: {
@@ -1053,9 +1145,16 @@
             computed: {
                 filteredPools() {
                     // Type filter: whole-pool. Empty selection = all types.
-                    return this.pools.filter(
+                    let list = this.pools.filter(
                         pool => this.selectedTypes.length === 0 || this.selectedTypes.includes(pool.pool_type)
                     );
+                    // Distance radius filter (only when sorting by distance with a known location).
+                    if (this.maxDistanceKm && this.sortByDistance && this.userLocation) {
+                        list = list.filter(
+                            pool => typeof pool.distanceKm === 'number' && pool.distanceKm <= this.maxDistanceKm
+                        );
+                    }
+                    return list;
                 },
                 activeQuickRange() {
                     // Highlight whichever quick-pick exactly matches the current range.
@@ -1105,6 +1204,12 @@
                 },
                 endDate(newVal) {
                     this.updateUrlParams();
+                },
+                filteredPools() {
+                    // Keep map markers in sync with the visible pool set.
+                    if (this.viewMode === 'map' && this.map) {
+                        this.$nextTick(() => this.renderMarkers());
+                    }
                 }
             },
             methods: {
@@ -1244,6 +1349,8 @@
                         }
                         const savedTypes = localStorage.getItem('laneduck_selectedTypes');
                         if (savedTypes) this.selectedTypes = JSON.parse(savedTypes);
+                        const savedRadius = localStorage.getItem('laneduck_maxDistanceKm');
+                        if (savedRadius) this.maxDistanceKm = Number(savedRadius);
                     } catch (e) {
                         // Corrupt/blocked storage — fall back to defaults silently.
                     }
@@ -1425,6 +1532,99 @@
                         delete pool.distance;
                         delete pool.distanceKm;
                     });
+                },
+
+                setMaxDistance(km) {
+                    this.maxDistanceKm = km;
+                    try {
+                        if (km) localStorage.setItem('laneduck_maxDistanceKm', String(km));
+                        else localStorage.removeItem('laneduck_maxDistanceKm');
+                    } catch (e) { /* storage unavailable — non-fatal */ }
+                },
+
+                setView(mode) {
+                    this.viewMode = mode;
+                    if (mode === 'map') {
+                        // The container must be visible (v-show) before Leaflet can size it.
+                        this.$nextTick(() => {
+                            this.initMap();
+                            if (this.map) {
+                                this.map.invalidateSize();
+                                this.renderMarkers();
+                            }
+                        });
+                    }
+                },
+
+                initMap() {
+                    if (typeof L === 'undefined') return; // Leaflet failed to load
+                    const el = document.getElementById('poolMap');
+                    if (!el) return;
+                    // If Vue re-created the container, tear down the stale map first.
+                    if (this.map && this.map.getContainer() !== el) {
+                        this.map.remove();
+                        this.map = null;
+                    }
+                    if (this.map) return;
+
+                    const center = this.userLocation
+                        ? [this.userLocation.lat, this.userLocation.lng]
+                        : [43.6532, -79.3832]; // downtown Toronto
+                    this.map = L.map(el, { scrollWheelZoom: true }).setView(center, 11);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }).addTo(this.map);
+                    this.markerLayer = L.layerGroup().addTo(this.map);
+                },
+
+                renderMarkers() {
+                    if (!this.map || !this.markerLayer) return;
+                    this.markerLayer.clearLayers();
+                    const bounds = [];
+
+                    if (this.userLocation) {
+                        L.circleMarker([this.userLocation.lat, this.userLocation.lng], {
+                            radius: 8, color: '#1d4ed8', fillColor: '#3b82f6', fillOpacity: 0.9, weight: 2
+                        }).bindPopup('<span class="map-pool-name">📍 You are here</span>').addTo(this.markerLayer);
+                        bounds.push([this.userLocation.lat, this.userLocation.lng]);
+                    }
+
+                    this.filteredPools.forEach(pool => {
+                        const c = pool.coordinates;
+                        if (!c || !c.x || !c.y) return;
+                        const marker = L.circleMarker([c.y, c.x], {
+                            radius: 7, color: '#12766f', fillColor: '#1AA8A0', fillOpacity: 0.85, weight: 2
+                        });
+                        marker.bindPopup(this.markerPopupHtml(pool));
+                        marker.addTo(this.markerLayer);
+                        bounds.push([c.y, c.x]);
+                    });
+
+                    if (bounds.length) {
+                        this.map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+                    }
+                },
+
+                markerPopupHtml(pool) {
+                    const esc = this.escapeHtml;
+                    const times = (pool.times || []).slice(0, 5)
+                        .map(t => `${this.formatTime(t.start_time)} – ${this.formatTime(t.end_time)} <span class="map-pool-meta">(${esc(this.formatDate(t.start_time))})</span>`)
+                        .join('<br>');
+                    const dist = pool.distance ? ` · ${esc(pool.distance)}` : '';
+                    const typeLabel = pool.pool_type === 'Outdoor' ? '☀️ Outdoor' : (pool.pool_type === 'Indoor' ? '🏠 Indoor' : '');
+                    const dir = (pool.coordinates && pool.coordinates.x && pool.coordinates.y)
+                        ? `<div style="margin-top:6px"><a class="map-dir" href="${this.getDirectionsUrl(pool.coordinates)}" target="_blank" rel="noopener">🧭 Directions</a></div>`
+                        : '';
+                    return `<span class="map-pool-name">${esc(pool.pool_name)}</span>${dist}`
+                        + `<div class="map-pool-meta">${typeLabel}</div>`
+                        + `<div class="map-times">${times}</div>${dir}`;
+                },
+
+                escapeHtml(str) {
+                    return String(str == null ? '' : str)
+                        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                 },
 
                 getDatePart(dateTimeLocal) {
