@@ -356,6 +356,7 @@ def main():
     try:
         import prerender
         prerender.build()
+        prerender.stamp_sitemap()  # keep sitemap lastmod fresh for SEO
     except Exception as e:
         logger.error(f"Prerender failed (non-fatal): {e}")
 
