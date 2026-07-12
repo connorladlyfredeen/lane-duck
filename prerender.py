@@ -32,6 +32,28 @@ def fmt_day(iso):
     return datetime.strptime(iso, "%Y-%m-%dT%H:%M:%S").strftime("%A, %B %-d")
 
 
+def stamp_sitemap(sitemap_file="sitemap.xml"):
+    """Update every <lastmod> in sitemap.xml to today's date (America/Toronto).
+
+    The sitemap advertises changefreq=daily, so a stale lastmod is a weak SEO
+    signal. This is called on every scrape run so the served sitemap always
+    reflects the day the data was last refreshed. No-op (with a warning) if the
+    sitemap is missing, so it can never break the scrape."""
+    if not os.path.exists(sitemap_file):
+        print(f"stamp_sitemap: {sitemap_file} not found, skipping")
+        return None
+    from scrape import now_toronto
+    today = now_toronto().strftime("%Y-%m-%d")
+    with open(sitemap_file, "r", encoding="utf-8") as f:
+        xml = f.read()
+    new_xml, n = re.subn(r"<lastmod>[^<]*</lastmod>", f"<lastmod>{today}</lastmod>", xml)
+    if new_xml != xml:
+        with open(sitemap_file, "w", encoding="utf-8") as f:
+            f.write(new_xml)
+    print(f"stamp_sitemap: set {n} <lastmod> entries to {today}")
+    return today
+
+
 def build(cache_file=CACHE_FILE, output_file=OUTPUT_FILE):
     with open(cache_file, "r", encoding="utf-8") as f:
         pools = json.load(f)
