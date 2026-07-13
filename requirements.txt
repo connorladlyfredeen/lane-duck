@@ -2,7 +2,7 @@
 # so the environment is reproducible. Install with: pip3 install -r requirements.txt
 fastapi==0.115.12
 uvicorn==0.33.0
-requests==2.22.0
+requests==2.33.0
 PyYAML==5.3.1
 tqdm==4.67.1
 
