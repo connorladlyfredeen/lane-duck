@@ -98,11 +98,18 @@ def now_toronto():
     before Toronto does (e.g. Sunday ~8pm-midnight ET), the scraper drops the day
     users still consider "today" and the site shows no pools for it.
 
+    Uses the stdlib zoneinfo (Python 3.9+), or the backports.zoneinfo shim on the
+    VM's Python 3.8. The tzdata pip package is pinned in requirements.txt so the
+    IANA database is guaranteed present regardless of the OS.
+
     Deliberately does NOT fall back to naive UTC on error: silently using the
-    wrong timezone reintroduces that exact bug with no signal. pytz is pinned in
-    requirements.txt, so a missing/broken tz database should fail loudly instead."""
-    import pytz  # required dependency; see requirements.txt
-    return datetime.now(pytz.timezone("America/Toronto"))
+    wrong timezone reintroduces that exact bug with no signal. A missing tz
+    database therefore raises loudly (ZoneInfoNotFoundError) instead."""
+    try:
+        from zoneinfo import ZoneInfo          # Python 3.9+
+    except ImportError:                          # Python 3.8 (production VM)
+        from backports.zoneinfo import ZoneInfo  # provided by backports.zoneinfo
+    return datetime.now(ZoneInfo("America/Toronto"))
 
 
 def convert_to_new_format(obj, week_offset=0, swim_type_title=None):

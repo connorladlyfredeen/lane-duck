@@ -5,7 +5,12 @@ uvicorn==0.33.0
 requests==2.22.0
 PyYAML==5.3.1
 tqdm==4.67.1
-pytz==2019.3
+
+# Timezone handling. now_toronto() uses stdlib zoneinfo (Python 3.9+) or the
+# backports.zoneinfo shim on the VM's Python 3.8; tzdata ships the IANA database
+# as a wheel so the correct tz data is present regardless of the OS.
+tzdata==2026.3
+backports.zoneinfo==0.2.1; python_version < "3.9"
 
 # Observability (optional at runtime — the app no-ops if SENTRY_DSN is unset).
 sentry-sdk[fastapi]>=2.0,<3
