@@ -15,15 +15,18 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 
-import pytz
+try:
+    from zoneinfo import ZoneInfo          # Python 3.9+
+except ImportError:                          # Python 3.8
+    from backports.zoneinfo import ZoneInfo
 
 import scrape
 
-TORONTO = pytz.timezone("America/Toronto")
+TORONTO = ZoneInfo("America/Toronto")
 
 # Sunday 2026-07-12, 8:30pm Toronto time. At this instant UTC is already
 # Monday 2026-07-13 00:30 — the exact condition that triggered the bug.
-SUNDAY_EVENING_ET = TORONTO.localize(datetime(2026, 7, 12, 20, 30))
+SUNDAY_EVENING_ET = datetime(2026, 7, 12, 20, 30, tzinfo=TORONTO)
 
 # The current week (Mon..Sun) that must appear in the output.
 EXPECTED = {
