@@ -109,7 +109,11 @@ def build(cache_file=CACHE_FILE, output_file=OUTPUT_FILE):
         meta_bits = []
         if address:
             meta_bits.append(html.escape(address))
-        meta_bits.append(f"{html.escape(pool_type)} pool")
+        pool_length = pool.get("pool_length", "Unknown")
+        type_bit = f"{html.escape(pool_type)} pool"
+        if pool_length and pool_length != "Unknown":
+            type_bit += f" &middot; {html.escape(pool_length)}"
+        meta_bits.append(type_bit)
         pool_sections.append(
             f'''  <section class="pool" id="{slugify(name)}">
     <h2>{title_html}</h2>
