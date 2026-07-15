@@ -37,12 +37,12 @@ echo -e "${YELLOW}📦 Step 1: Uploading assets to server...${NC}"
 
 # Upload Python files
 echo "Uploading Python backend files..."
-gcloud compute scp get_pools.py scrape.py prerender.py obs.py pool_lengths.json "$SERVER:$REMOTE_DIR/" \
+gcloud compute scp get_pools.py scrape.py prerender.py obs.py beaches.py pool_lengths.json "$SERVER:$REMOTE_DIR/" \
     --zone "$ZONE" --project "$PROJECT"
 
 # Upload frontend
 echo "Uploading frontend files..."
-gcloud compute scp index.html "$SERVER:$REMOTE_DIR/" \
+gcloud compute scp index.html beaches.html "$SERVER:$REMOTE_DIR/" \
     --zone "$ZONE" --project "$PROJECT"
 
 # Upload documentation
