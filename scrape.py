@@ -410,6 +410,8 @@ def main():
     try:
         import beaches
         beaches.build()
+        import prerender
+        prerender.build_beaches()  # static crawlable snapshot into beaches.html
     except Exception as e:
         logger.error(f"Beaches refresh failed (non-fatal): {e}")
 

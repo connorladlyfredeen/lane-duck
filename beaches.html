@@ -25,9 +25,9 @@
     <meta property="og:url" content="https://www.connorladly.com/lane-duck/beaches">
     <meta property="og:image" content="https://www.connorladly.com/lane-duck/og-image.png">
 
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Leaflet stylesheet in head; the Vue + Leaflet scripts load at end of body
+         so a slow/flaky CDN can never leave the page blank (they no longer block paint). -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
             --bg-1: #e8f3f2; --bg-2: #d6e9ea; --surface: #ffffff; --surface-2: #f5f8f8;
@@ -104,6 +104,13 @@
         .loading, .empty { text-align: center; color: var(--text-muted); padding: 40px 16px; }
         .foot { margin-top: 26px; text-align: center; color: var(--text-faint); font-size: .82rem; }
         .foot a { color: var(--accent-strong); }
+        .beach-static { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: .9rem; }
+        .beach-static h2 { font-size: 1.15rem; color: var(--text); margin-bottom: 10px; }
+        .beach-static ul { list-style: none; display: grid; gap: 6px; margin-top: 8px; }
+        .beach-static a { color: var(--accent-strong); font-weight: 600; }
+        .bs-safe { color: var(--safe-fg); font-weight: 700; }
+        .bs-unsafe { color: var(--unsafe-fg); font-weight: 700; }
+        .bs-unknown { color: var(--unknown-fg); font-weight: 700; }
         .leaflet-popup-content { font-size: .88rem; line-height: 1.45; }
         .leaflet-popup-content a { color: #12766f; font-weight: 700; }
         @media (max-width: 600px) { #beachMap { height: 360px; } .view-toggle { margin-left: 0; } }
@@ -168,6 +175,20 @@
         </p>
     </div>
 
+    <!-- Static, crawlable snapshot of current beach conditions. Populated by
+         prerender.py on each scrape; also the fallback shown if the app can't load. -->
+    <section class="beach-static wrap" aria-labelledby="beach-static-h">
+        <h2 id="beach-static-h">Toronto beach water quality — today's conditions</h2>
+        <!-- BEACHES_STATIC_START -->
+        <p>Live SAFE / UNSAFE swim advisories for Toronto's supervised beaches load above.
+           Water quality is sampled daily in summer by Toronto Public Health. If the interactive
+           version doesn't load, see the
+           <a href="https://www.toronto.ca/community-people/health-wellness-care/health-inspections-monitoring/swimsafe/beach-water-quality/">City of Toronto beach water quality page</a>.</p>
+        <!-- BEACHES_STATIC_END -->
+    </section>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const { createApp } = Vue;
         createApp({

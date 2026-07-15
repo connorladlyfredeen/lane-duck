@@ -54,6 +54,68 @@ def stamp_sitemap(sitemap_file="sitemap.xml"):
     return today
 
 
+def build_beaches(cache_file="tmp/beaches_cache.json", html_file="beaches.html"):
+    """Inject a static, crawlable snapshot of current beach conditions into
+    beaches.html (between the BEACHES_STATIC markers). Gives search engines real
+    content and doubles as the fallback shown if the interactive app can't load.
+    Fully non-fatal: missing cache/markers/file just skips."""
+    START, END = "<!-- BEACHES_STATIC_START -->", "<!-- BEACHES_STATIC_END -->"
+    try:
+        with open(cache_file, "r", encoding="utf-8") as f:
+            beaches = json.load(f)
+        with open(html_file, "r", encoding="utf-8") as f:
+            page = f.read()
+    except (FileNotFoundError, ValueError) as e:
+        print(f"build_beaches: skipped ({e})")
+        return None
+    if START not in page or END not in page or not beaches:
+        print("build_beaches: markers missing or no beaches, skipped")
+        return None
+
+    def status_span(s):
+        cls = {"SAFE": "bs-safe", "UNSAFE": "bs-unsafe"}.get(s, "bs-unknown")
+        label = {"SAFE": "🟢 Safe to swim", "UNSAFE": "🔴 Unsafe"}.get(s, "⚪ No recent data")
+        return f'<span class="{cls}">{label}</span>'
+
+    def fmt_date(iso):
+        try:
+            return datetime.strptime(iso, "%Y-%m-%d").strftime("%B %-d")
+        except (ValueError, TypeError):
+            return iso or "n/a"
+
+    dates = [b.get("sample_date") for b in beaches if b.get("sample_date")]
+    latest = fmt_date(max(dates)) if dates else "the latest sampling day"
+    safe = sum(1 for b in beaches if b.get("status") == "SAFE")
+    unsafe = sum(1 for b in beaches if b.get("status") == "UNSAFE")
+
+    items = []
+    for b in sorted(beaches, key=lambda x: x.get("beach_name", "")):
+        name = html.escape(b.get("beach_name", "").strip())
+        eco = b.get("ecoli")
+        bits = []
+        if eco is not None:
+            bits.append(f"E. coli {html.escape(str(eco))}")
+        if b.get("sample_date"):
+            bits.append(f"sampled {fmt_date(b['sample_date'])}")
+        if b.get("blue_flag"):
+            bits.append("Blue Flag")
+        detail = f" ({', '.join(bits)})" if bits else ""
+        items.append(f"      <li>{status_span(b.get('status'))} — <strong>{name}</strong>{detail}</li>")
+
+    snapshot = (
+        f"\n        <p>As of {latest}, {len(beaches)} Toronto supervised beaches are monitored for water quality — "
+        f"{safe} currently safe to swim{f', {unsafe} posted unsafe' if unsafe else ''}. "
+        f"Toronto Public Health samples E. coli daily in summer; a beach is posted unsafe above 100 E. coli/100 mL.</p>\n"
+        f"    <ul>\n{os.linesep.join(items)}\n    </ul>\n    "
+    )
+
+    new_page = page[:page.index(START) + len(START)] + snapshot + page[page.index(END):]
+    with open(html_file, "w", encoding="utf-8") as f:
+        f.write(new_page)
+    print(f"build_beaches: wrote snapshot for {len(beaches)} beaches ({safe} safe, {unsafe} unsafe)")
+    return html_file
+
+
 def build(cache_file=CACHE_FILE, output_file=OUTPUT_FILE):
     with open(cache_file, "r", encoding="utf-8") as f:
         pools = json.load(f)
