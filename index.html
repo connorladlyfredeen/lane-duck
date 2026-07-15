@@ -1179,7 +1179,7 @@
                 availableLengths() {
                     // Distinct known lengths across the current result set, ordered 25m, 50m, then others.
                     const set = new Set(this.pools.map(p => p.pool_length).filter(l => l && l !== 'Unknown'));
-                    const order = ['25m', '50m'];
+                    const order = ['25m', '25y', '50m', '50y', '20y', '<25m'];
                     return [...set].sort((a, b) => {
                         const ia = order.indexOf(a), ib = order.indexOf(b);
                         return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b);

@@ -19,9 +19,9 @@
   },
   "31": {
     "name": "Alexandra Park Outdoor Pool",
-    "length": "unknown",
-    "confidence": "low",
-    "source": "(corrected: not 50m; unverified)"
+    "length": "50y",
+    "confidence": "high",
+    "source": "user-confirmed"
   },
   "480": {
     "name": "Amesbury Sports Complex",
@@ -103,7 +103,7 @@
   },
   "329": {
     "name": "East York Community Centre",
-    "length": "<25m",
+    "length": "25y",
     "confidence": "high",
     "source": "places2swim"
   },
@@ -169,7 +169,7 @@
   },
   "896": {
     "name": "Gus Ryder Pool and Health Club",
-    "length": "<25m",
+    "length": "25y",
     "confidence": "high",
     "source": "swimmersguide"
   },
@@ -181,7 +181,7 @@
   },
   "45": {
     "name": "Harrison Pool",
-    "length": "<25m",
+    "length": "20y",
     "confidence": "high",
     "source": "foursquare"
   },
@@ -199,7 +199,7 @@
   },
   "48": {
     "name": "Hillcrest Community Centre",
-    "length": "<25m",
+    "length": "25y",
     "confidence": "high",
     "source": "hillcrestcommunitycentre.com"
   },
@@ -271,7 +271,7 @@
   },
   "100": {
     "name": "Mary McCormick Recreation Centre",
-    "length": "<25m",
+    "length": "25y",
     "confidence": "high",
     "source": "places2swim"
   },
@@ -427,9 +427,9 @@
   },
   "287": {
     "name": "Trinity Community Recreation Centre",
-    "length": "25m",
+    "length": "25y",
     "confidence": "high",
-    "source": "places2swim"
+    "source": "user-confirmed"
   },
   "1371": {
     "name": "Vaughan Road Academy",
@@ -487,7 +487,7 @@
   },
   "1387": {
     "name": "Wexford Collegiate Institute",
-    "length": "<25m",
+    "length": "25y",
     "confidence": "high",
     "source": "swimia"
   },
