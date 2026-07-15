@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-NLRQ9QM');</script>
+    <!-- End Google Tag Manager -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Toronto Beach Water Quality — Safe to Swim Today? | LaneDuck 🦆</title>
+    <meta name="description" content="Is it safe to swim at Toronto's beaches today? Live E. coli water-quality advisories (SAFE / UNSAFE) for all supervised Toronto beaches, with directions and distance. Updated daily.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://www.connorladly.com/lane-duck/beaches">
+    <meta name="geo.region" content="CA-ON">
+    <meta name="geo.placename" content="Toronto">
+    <meta name="theme-color" content="#1AA8A0">
+    <meta property="og:title" content="Toronto Beach Water Quality — Safe to Swim Today? | LaneDuck">
+    <meta property="og:description" content="Live E. coli swim advisories for every supervised Toronto beach, indoor & outdoor. Updated daily.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.connorladly.com/lane-duck/beaches">
+    <meta property="og:image" content="https://www.connorladly.com/lane-duck/og-image.png">
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --bg-1: #e8f3f2; --bg-2: #d6e9ea; --surface: #ffffff; --surface-2: #f5f8f8;
+            --surface-3: #eef3f3; --border: #e0e7e7; --border-strong: #cdd8d8;
+            --text: #1C2B2A; --text-muted: #5c6d6c; --text-faint: #8a9998;
+            --accent: #1AA8A0; --accent-strong: #148179; --accent-soft: #e4f5f4;
+            --safe-bg: #e6f6ec; --safe-fg: #157a3a; --unsafe-bg: #fdeaea; --unsafe-fg: #c0392b;
+            --unknown-bg: #eef1f1; --unknown-fg: #6b7a79;
+            --radius: 16px; --radius-sm: 10px;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-1: #0e1a1a; --bg-2: #12201f; --surface: #16211f; --surface-2: #1b2725;
+                --surface-3: #202e2c; --border: #2a3b39; --border-strong: #354744;
+                --text: #e8f0ef; --text-muted: #9fb1af; --text-faint: #7b8c8a;
+                --accent: #2fc3ba; --accent-strong: #56d6ce; --accent-soft: #16302e;
+                --safe-bg: #10321f; --safe-fg: #5fd08a; --unsafe-bg: #3a1a18; --unsafe-fg: #f08a7e;
+                --unknown-bg: #202e2c; --unknown-fg: #9fb1af;
+            }
+        }
+        :root[data-theme="dark"] {
+            --bg-1: #0e1a1a; --bg-2: #12201f; --surface: #16211f; --surface-2: #1b2725;
+            --surface-3: #202e2c; --border: #2a3b39; --text: #e8f0ef; --text-muted: #9fb1af;
+            --accent: #2fc3ba; --accent-strong: #56d6ce; --accent-soft: #16302e;
+            --safe-bg: #10321f; --safe-fg: #5fd08a; --unsafe-bg: #3a1a18; --unsafe-fg: #f08a7e;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background:
+                radial-gradient(1200px 600px at 15% -10%, var(--bg-2), transparent 60%),
+                linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+            color: var(--text); min-height: 100vh; line-height: 1.5; padding: 20px 16px 60px;
+        }
+        .wrap { max-width: 960px; margin: 0 auto; }
+        header.hero {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+            color: #fff; border-radius: var(--radius); padding: 28px 26px; margin-bottom: 18px;
+        }
+        header.hero h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
+        header.hero p { opacity: .95; font-size: .96rem; }
+        header.hero a { color: #fff; font-weight: 700; }
+        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+        .btn {
+            font-family: inherit; font-weight: 600; font-size: .9rem; cursor: pointer;
+            border: 1.5px solid var(--border-strong); background: var(--surface); color: var(--text);
+            padding: 10px 16px; border-radius: var(--radius-sm); min-height: 44px;
+            display: inline-flex; align-items: center; gap: 6px; transition: border-color .2s, background .2s;
+        }
+        .btn:hover { border-color: var(--accent); }
+        .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .view-toggle { display: inline-flex; gap: 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; margin-left: auto; }
+        .view-toggle button { border: none; background: transparent; padding: 8px 14px; border-radius: 8px; font-family: inherit; font-weight: 600; font-size: .88rem; color: var(--text-muted); cursor: pointer; min-height: 38px; }
+        .view-toggle button.active { background: var(--accent); color: #fff; }
+        .notice { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 16px; font-size: .9rem; color: var(--text-muted); }
+        .notice a { color: var(--accent-strong); font-weight: 600; }
+        #beachMap { width: 100%; height: 460px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 16px; z-index: 0; }
+        .beach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+        .beach-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 8px; }
+        .beach-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .beach-name { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em; }
+        .status-pill { font-size: .8rem; font-weight: 800; padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
+        .status-SAFE { background: var(--safe-bg); color: var(--safe-fg); }
+        .status-UNSAFE { background: var(--unsafe-bg); color: var(--unsafe-fg); }
+        .status-UNKNOWN { background: var(--unknown-bg); color: var(--unknown-fg); }
+        .beach-meta { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: .84rem; color: var(--text-muted); }
+        .beach-badge { font-size: .78rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--surface-3); color: var(--text-muted); }
+        .beach-badge.blue { background: #e5eefc; color: #2f5fbf; }
+        @media (prefers-color-scheme: dark) { .beach-badge.blue { background: #16263f; color: #7ea6f0; } }
+        .advisory { font-size: .84rem; color: var(--text-muted); }
+        .beach-actions { margin-top: 4px; }
+        .directions-btn { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; font-weight: 700; color: var(--accent-strong); text-decoration: none; min-height: 44px; }
+        .directions-btn:hover { text-decoration: underline; }
+        .loading, .empty { text-align: center; color: var(--text-muted); padding: 40px 16px; }
+        .foot { margin-top: 26px; text-align: center; color: var(--text-faint); font-size: .82rem; }
+        .foot a { color: var(--accent-strong); }
+        .leaflet-popup-content { font-size: .88rem; line-height: 1.45; }
+        .leaflet-popup-content a { color: #12766f; font-weight: 700; }
+        @media (max-width: 600px) { #beachMap { height: 360px; } .view-toggle { margin-left: 0; } }
+    </style>
+</head>
+<body>
+    <noscript><p style="text-align:center">This page needs JavaScript. See the <a href="https://www.toronto.ca/community-people/health-wellness-care/health-inspections-monitoring/swimsafe/beach-water-quality/">City of Toronto beach water quality page</a>.</p></noscript>
+    <div id="app" class="wrap">
+        <header class="hero">
+            <h1>🌊 Toronto Beach Water Quality</h1>
+            <p>Is it safe to swim today? Daily E. coli advisories for Toronto's supervised beaches. <a href="./">← Pool lane swim finder</a></p>
+        </header>
+
+        <div class="notice" v-if="anyStale">
+            ⚠️ Some readings are from a previous sampling day (likely off-season). Always confirm on the
+            <a :href="cityUrl" target="_blank" rel="noopener">City of Toronto beach page</a> before you go.
+        </div>
+
+        <div class="toolbar" v-if="!loading && beaches.length">
+            <button class="btn" :class="{ active: sortByDistance }" @click="toggleDistance" :disabled="locating">
+                {{ locating ? '🔄 Locating…' : (sortByDistance ? '📍 Nearest first · ON' : '📍 Sort by distance') }}
+            </button>
+            <div class="view-toggle" role="group" aria-label="List or map view">
+                <button :class="{ active: viewMode==='list' }" @click="setView('list')">📋 List</button>
+                <button :class="{ active: viewMode==='map' }" @click="setView('map')">🗺️ Map</button>
+            </div>
+        </div>
+
+        <div v-if="loading" class="loading"><h3>🌊 Loading beach conditions…</h3></div>
+        <div v-if="error" class="notice">{{ error }}</div>
+
+        <div id="beachMap" v-show="!loading && viewMode==='map' && beaches.length" role="application" aria-label="Map of Toronto beaches"></div>
+
+        <div class="beach-grid" v-show="!loading && viewMode==='list'">
+            <div class="beach-card" v-for="b in beaches" :key="b.beach_id">
+                <div class="beach-top">
+                    <span class="beach-name">{{ b.beach_name }}</span>
+                    <span class="status-pill" :class="'status-' + b.status">{{ statusLabel(b) }}</span>
+                </div>
+                <div class="beach-meta">
+                    <span v-if="b.ecoli !== null && b.ecoli !== undefined">🧫 E. coli {{ b.ecoli }}/100mL</span>
+                    <span v-if="b.sample_date">🗓️ sampled {{ prettyDate(b.sample_date) }}</span>
+                    <span v-if="b.distance">📍 {{ b.distance }}</span>
+                    <span class="beach-badge blue" v-if="b.blue_flag">🏳️ Blue Flag</span>
+                </div>
+                <div class="advisory" v-if="b.advisory">{{ b.advisory }}</div>
+                <div class="beach-actions" v-if="b.lat && b.lon">
+                    <a class="directions-btn" :href="directionsUrl(b)" target="_blank" rel="noopener">🧭 Directions</a>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="!loading && !error && !beaches.length" class="empty">
+            <h3>No beach data available</h3>
+            <p>Check the <a :href="cityUrl">City of Toronto beach page</a>.</p>
+        </div>
+
+        <p class="foot">
+            Advisories from Toronto Public Health (SwimSafe). A beach is posted <strong>unsafe</strong> when E. coli
+            exceeds 100/100 mL. Data updates daily in summer — always confirm on the
+            <a :href="cityUrl" target="_blank" rel="noopener">official City page</a> before swimming.
+        </p>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    beaches: [], loading: true, error: null,
+                    viewMode: 'list',
+                    sortByDistance: false, locating: false, userLocation: null,
+                    cityUrl: 'https://www.toronto.ca/community-people/health-wellness-care/health-inspections-monitoring/swimsafe/beach-water-quality/',
+                };
+            },
+            computed: {
+                anyStale() { return this.beaches.some(b => b.stale && b.sample_date); },
+            },
+            mounted() { this.fetchBeaches(); },
+            methods: {
+                apiBase() {
+                    const l = window.location;
+                    const isLocal = l.protocol === 'file:' || ['localhost','127.0.0.1',''].includes(l.hostname);
+                    return isLocal ? 'http://127.0.0.1:3000' : 'https://www.connorladly.com/api/toronto-pools';
+                },
+                async fetchBeaches() {
+                    this.loading = true; this.error = null;
+                    try {
+                        const res = await fetch(`${this.apiBase()}/beaches`);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        this.beaches = await res.json();
+                        this.applySort();
+                    } catch (e) {
+                        this.error = `Couldn't load beach data (${e.message}).`;
+                        this.beaches = [];
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                statusLabel(b) { return b.status === 'SAFE' ? '🟢 Safe to swim' : (b.status === 'UNSAFE' ? '🔴 Unsafe' : '⚪ No data'); },
+                prettyDate(iso) {
+                    const d = new Date(iso + 'T00:00:00');
+                    return isNaN(d) ? iso : d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
+                },
+                directionsUrl(b) { return `https://www.google.com/maps/dir/?api=1&destination=${b.lat},${b.lon}`; },
+                // --- distance (Haversine), mirrors the pools app ---
+                async toggleDistance() {
+                    if (this.sortByDistance) { this.sortByDistance = false; this.beaches.forEach(b => delete b.distance); this.applySort(); return; }
+                    if (!navigator.geolocation) { this.error = 'Geolocation not supported.'; return; }
+                    this.locating = true;
+                    try {
+                        const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }));
+                        this.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                        this.sortByDistance = true;
+                        this.applySort();
+                        if (this.viewMode === 'map') this.$nextTick(() => this.renderMarkers());
+                    } catch (e) {
+                        this.error = 'Could not get your location.';
+                    } finally { this.locating = false; }
+                },
+                applySort() {
+                    if (this.sortByDistance && this.userLocation) {
+                        this.beaches.forEach(b => {
+                            if (b.lat && b.lon) {
+                                const km = this.haversine(this.userLocation.lat, this.userLocation.lng, b.lat, b.lon);
+                                b.distanceKm = km;
+                                b.distance = km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
+                            }
+                        });
+                        this.beaches.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+                    } else {
+                        this.beaches.sort((a, b) => a.beach_name.localeCompare(b.beach_name));
+                    }
+                },
+                haversine(lat1, lng1, lat2, lng2) {
+                    const R = 6371, toRad = d => d * Math.PI / 180;
+                    const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+                    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+                    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                },
+                // --- map ---
+                setView(mode) {
+                    this.viewMode = mode;
+                    if (mode === 'map') this.$nextTick(() => { this.initMap(); if (this.map) { this.map.invalidateSize(); this.renderMarkers(); } });
+                },
+                initMap() {
+                    if (typeof L === 'undefined') return;
+                    const el = document.getElementById('beachMap');
+                    if (!el) return;
+                    if (this.map && this.map.getContainer() !== el) { this.map.remove(); this.map = null; }
+                    if (this.map) return;
+                    const center = this.userLocation ? [this.userLocation.lat, this.userLocation.lng] : [43.66, -79.38];
+                    this.map = L.map(el, { scrollWheelZoom: true }).setView(center, 11);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(this.map);
+                    this.markerLayer = L.layerGroup().addTo(this.map);
+                },
+                renderMarkers() {
+                    if (!this.map || !this.markerLayer) return;
+                    this.markerLayer.clearLayers();
+                    const bounds = [];
+                    if (this.userLocation) {
+                        L.circleMarker([this.userLocation.lat, this.userLocation.lng], { radius: 8, color: '#1d4ed8', fillColor: '#3b82f6', fillOpacity: .9, weight: 2 }).bindPopup('<strong>📍 You are here</strong>').addTo(this.markerLayer);
+                        bounds.push([this.userLocation.lat, this.userLocation.lng]);
+                    }
+                    const color = s => s === 'SAFE' ? '#1f9d55' : (s === 'UNSAFE' ? '#c0392b' : '#8a9998');
+                    this.beaches.forEach(b => {
+                        if (!b.lat || !b.lon) return;
+                        const m = L.circleMarker([b.lat, b.lon], { radius: 9, color: '#fff', fillColor: color(b.status), fillOpacity: .95, weight: 2 });
+                        m.bindPopup(this.popupHtml(b));
+                        m.addTo(this.markerLayer);
+                        bounds.push([b.lat, b.lon]);
+                    });
+                    if (bounds.length) this.map.fitBounds(bounds, { padding: [30, 30], maxZoom: 13 });
+                },
+                popupHtml(b) {
+                    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                    const label = b.status === 'SAFE' ? '🟢 Safe to swim' : (b.status === 'UNSAFE' ? '🔴 Unsafe' : '⚪ No data');
+                    const eco = (b.ecoli !== null && b.ecoli !== undefined) ? ` · E. coli ${b.ecoli}` : '';
+                    const date = b.sample_date ? `<br><span style="color:#5b6b6a">sampled ${esc(this.prettyDate(b.sample_date))}</span>` : '';
+                    const dir = `<br><a href="${this.directionsUrl(b)}" target="_blank" rel="noopener">🧭 Directions</a>`;
+                    return `<strong>${esc(b.beach_name)}</strong><br>${label}${eco}${date}${dir}`;
+                },
+            },
+        }).mount('#app');
+    </script>
+</body>
+</html>

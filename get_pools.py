@@ -137,6 +137,18 @@ async def pools(
     # Return the full pool objects
     return matched_pools
 
+
+@app.get("/beaches", response_model=List[dict])
+async def beaches():
+    """Toronto supervised beaches with the latest water-quality advisory
+    (SAFE/UNSAFE), E. coli, sample date, coordinates, and Blue Flag status.
+    Served from tmp/beaches_cache.json, refreshed by the daily scrape."""
+    try:
+        with open("tmp/beaches_cache.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
 # Generate OpenAPI schema and save it to openapi.yaml
 @app.on_event("startup")
 async def startup_event():

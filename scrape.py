@@ -405,6 +405,14 @@ def main():
     except Exception as e:
         logger.error(f"Prerender failed (non-fatal): {e}")
 
+    # Refresh Toronto beach water-quality advisories (see beaches.py).
+    # Non-fatal: a beaches failure must not fail the pool scrape.
+    try:
+        import beaches
+        beaches.build()
+    except Exception as e:
+        logger.error(f"Beaches refresh failed (non-fatal): {e}")
+
     # Log completion timestamp
     log_scrape_completion()
 
