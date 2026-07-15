@@ -253,9 +253,9 @@
   },
   "425": {
     "name": "Leaside Outdoor Pool",
-    "length": "25m",
-    "confidence": "medium",
-    "source": "places2swim"
+    "length": "unknown",
+    "confidence": "low",
+    "source": "audit: units unconfirmed / non-standard length"
   },
   "678": {
     "name": "Ledbury Park",
@@ -409,9 +409,9 @@
   },
   "433": {
     "name": "Sunnyside Gus Ryder Outdoor Pool",
-    "length": "25m",
-    "confidence": "medium",
-    "source": "toronto.ca"
+    "length": "unknown",
+    "confidence": "low",
+    "source": "audit: units unconfirmed / non-standard length"
   },
   "282": {
     "name": "Swansea Community Recreation Centre",

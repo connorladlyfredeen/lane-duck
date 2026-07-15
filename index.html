@@ -80,7 +80,7 @@
             "Filter indoor and outdoor pools",
             "Sort pools by distance from your location",
             "One-tap directions to each pool",
-            "25m and 50m lane lengths"
+            "25y, 25m, 50y and 50m lane lengths"
           ],
           "author": {
             "@type": "Person",
@@ -101,7 +101,7 @@
               "name": "Are Toronto public pool lane swims free?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Yes. Drop-in lane swimming at City of Toronto public pools is free — no registration or membership required. Just arrive during a scheduled lane swim."
+                "text": "It depends on the pool. Outdoor pool lane swims are free — just show up during a scheduled lane swim. Indoor pool lane swims usually require a paid drop-in admission (or a membership/pass). Check the pool's official page for its fees."
               }
             },
             {
@@ -125,7 +125,7 @@
               "name": "What pool lengths are available?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Toronto pools offer 25-metre and 50-metre lanes. Longer 50m lanes are ideal for continuous lap swimming."
+                "text": "Toronto pools come in several lengths — 25 yards (25y), 25 metres (25m), 50 yards (50y) and 50 metres (50m). LaneDuck labels each pool's length where known so you can filter for the distance you want."
               }
             },
             {
@@ -150,10 +150,9 @@
     }
     </script>
 
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- Leaflet (map view) -->
+    <!-- Leaflet stylesheet in head; Vue + Leaflet scripts load at end of body so a
+         slow/flaky CDN never blocks first paint (prevents blank/frozen page). -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
             --bg-1: #e8f3f2;
@@ -1112,13 +1111,13 @@
             </ol>
 
             <h2>Toronto pools and neighbourhoods covered</h2>
-            <p>LaneDuck covers indoor and outdoor public pools across all six Toronto districts — <strong>Downtown / Old Toronto, East York, Etobicoke, North York, Scarborough and York</strong> — with 25-metre and 50-metre lanes. Whether you want an early-morning lap swim downtown or an evening swim in the suburbs, you can check today's lane swim schedule in seconds.</p>
+            <p>LaneDuck covers indoor and outdoor public pools across all six Toronto districts — <strong>Downtown / Old Toronto, East York, Etobicoke, North York, Scarborough and York</strong> — with pools in 25 yards, 25 metres, 50 yards and 50 metres. Whether you want an early-morning lap swim downtown or an evening swim in the suburbs, you can check today's lane swim schedule in seconds.</p>
             <p><a href="/lane-duck/pools"><strong>Browse the full lane swim schedule for every Toronto pool →</strong></a> — a complete, printable list of every pool with lane swimming, its address, and upcoming times.</p>
 
             <h2>Frequently asked questions</h2>
             <div class="faq-item">
                 <h3>Are Toronto public pool lane swims free?</h3>
-                <p>Yes. Drop-in lane swimming at City of Toronto public pools is free — no registration or membership required. Just arrive during a scheduled lane swim.</p>
+                <p>It depends on the pool. <strong>Outdoor</strong> pool lane swims are free — just show up during a scheduled lane swim. <strong>Indoor</strong> pool lane swims usually require a paid drop-in admission (or a membership/pass). Check the pool's official page for its fees.</p>
             </div>
             <div class="faq-item">
                 <h3>How many Toronto pools offer lane swimming?</h3>
@@ -1130,7 +1129,7 @@
             </div>
             <div class="faq-item">
                 <h3>What pool lengths are available?</h3>
-                <p>Toronto pools offer 25-metre and 50-metre lanes. Longer 50m lanes are ideal for continuous lap swimming.</p>
+                <p>Toronto pools come in several lengths — 25 yards (25y), 25 metres (25m), 50 yards (50y) and 50 metres (50m). LaneDuck labels each pool's length where known so you can filter for the distance you want.</p>
             </div>
             <div class="faq-item">
                 <h3>How often are the swim schedules updated?</h3>
@@ -1145,6 +1144,8 @@
         </div>
     </section>
 
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const { createApp } = Vue;
 
