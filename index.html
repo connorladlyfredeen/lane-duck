@@ -461,7 +461,8 @@
             border-color: var(--accent);
         }
 
-        .chip.active.chip-type {
+        .chip.active.chip-type,
+        .chip.active.chip-length {
             background: var(--accent);
             border-color: var(--accent);
             color: #fff;
@@ -676,6 +677,8 @@
         }
 
         .badge-type { background: var(--surface-3); color: var(--text-muted); }
+        .badge-length { background: var(--surface-3); color: var(--text-muted); }
+        .coverage-note { color: var(--text-faint); font-size: 0.82rem; margin: -6px 0 14px; }
         .badge-distance { background: var(--accent-soft); color: var(--accent-strong); }
 
         .pool-actions { display: flex; gap: 8px; }
@@ -954,6 +957,16 @@
                                     @click="toggleType('Outdoor')">Outdoor</button>
                         </div>
                     </div>
+                    <div class="chip-group" v-if="availableLengths.length" role="group" aria-label="Filter by pool length">
+                        <label>Length: {{ selectedLengths.length ? selectedLengths.join(', ') : 'All' }}</label>
+                        <div class="chips">
+                            <button type="button" class="chip chip-length"
+                                    v-for="len in availableLengths" :key="len"
+                                    :class="{ active: selectedLengths.includes(len) }"
+                                    :aria-pressed="selectedLengths.includes(len)"
+                                    @click="toggleLength(len)">{{ len }}</button>
+                        </div>
+                    </div>
                     <div class="chip-group" v-if="sortByDistance && userLocation" role="group" aria-label="Filter by distance">
                         <label>Within: {{ maxDistanceKm ? maxDistanceKm + ' km' : 'Any distance' }}</label>
                         <div class="chips">
@@ -1005,6 +1018,7 @@
                             </div>
                         </div>
                     </div>
+                    <p class="coverage-note" v-if="availableLengths.length">📏 Pool length known for {{ lengthCoverage.known }} of {{ lengthCoverage.total }} pools.</p>
 
                     <div id="poolMap" v-show="viewMode === 'map'" role="application" aria-label="Map of pools with lane swims"></div>
 
@@ -1018,6 +1032,7 @@
                                 <div class="pool-meta">
                                     <span class="pool-address" v-if="pool.address">{{ pool.address }}</span>
                                     <span class="badge badge-type" v-if="pool.pool_type">{{ pool.pool_type === 'Outdoor' ? '☀️ Outdoor' : '🏠 Indoor' }}</span>
+                                    <span class="badge badge-length" v-if="pool.pool_length && pool.pool_length !== 'Unknown'">📏 {{ pool.pool_length }}</span>
                                     <span class="badge badge-distance" v-if="pool.distance">📍 {{ pool.distance }}</span>
                                 </div>
                                 <div class="pool-actions">
@@ -1132,6 +1147,7 @@
                     maxDistanceKm: null, // radius filter in km (null = any distance)
                     viewMode: 'list',    // 'list' | 'map'
                     selectedTypes: [],   // 'Indoor', 'Outdoor' (empty = All)
+                    selectedLengths: [], // '25m', '50m', ... (empty = All)
                     // Quick-pick presets: key -> [dayOffset, startHour, endHour]
                     quickPresets: {
                         'today':        [0, 6, 23],   // whole day
@@ -1148,6 +1164,10 @@
                     let list = this.pools.filter(
                         pool => this.selectedTypes.length === 0 || this.selectedTypes.includes(pool.pool_type)
                     );
+                    // Length filter: whole-pool. Empty selection = all lengths.
+                    if (this.selectedLengths.length) {
+                        list = list.filter(pool => this.selectedLengths.includes(pool.pool_length));
+                    }
                     // Distance radius filter (only when sorting by distance with a known location).
                     if (this.maxDistanceKm && this.sortByDistance && this.userLocation) {
                         list = list.filter(
@@ -1155,6 +1175,20 @@
                         );
                     }
                     return list;
+                },
+                availableLengths() {
+                    // Distinct known lengths across the current result set, ordered 25m, 50m, then others.
+                    const set = new Set(this.pools.map(p => p.pool_length).filter(l => l && l !== 'Unknown'));
+                    const order = ['25m', '25y', '50m', '50y', '20y', '<25m'];
+                    return [...set].sort((a, b) => {
+                        const ia = order.indexOf(a), ib = order.indexOf(b);
+                        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b);
+                    });
+                },
+                lengthCoverage() {
+                    // How many pools in the current results have a known length.
+                    const known = this.pools.filter(p => p.pool_length && p.pool_length !== 'Unknown').length;
+                    return { known, total: this.pools.length };
                 },
                 activeQuickRange() {
                     // Highlight whichever quick-pick exactly matches the current range.
@@ -1349,6 +1383,8 @@
                         }
                         const savedTypes = localStorage.getItem('laneduck_selectedTypes');
                         if (savedTypes) this.selectedTypes = JSON.parse(savedTypes);
+                        const savedLengths = localStorage.getItem('laneduck_selectedLengths');
+                        if (savedLengths) this.selectedLengths = JSON.parse(savedLengths);
                         const savedRadius = localStorage.getItem('laneduck_maxDistanceKm');
                         if (savedRadius) this.maxDistanceKm = Number(savedRadius);
                     } catch (e) {
@@ -1370,6 +1406,7 @@
                 saveChipFilters() {
                     try {
                         localStorage.setItem('laneduck_selectedTypes', JSON.stringify(this.selectedTypes));
+                        localStorage.setItem('laneduck_selectedLengths', JSON.stringify(this.selectedLengths));
                     } catch (e) {
                         // Storage unavailable — non-fatal.
                     }
@@ -1385,8 +1422,19 @@
                     this.saveChipFilters();
                 },
 
+                toggleLength(len) {
+                    const i = this.selectedLengths.indexOf(len);
+                    if (i === -1) {
+                        this.selectedLengths.push(len);
+                    } else {
+                        this.selectedLengths.splice(i, 1);
+                    }
+                    this.saveChipFilters();
+                },
+
                 clearChipFilters() {
                     this.selectedTypes = [];
+                    this.selectedLengths = [];
                     this.saveChipFilters();
                 },
 
@@ -1613,11 +1661,12 @@
                         .join('<br>');
                     const dist = pool.distance ? ` · ${esc(pool.distance)}` : '';
                     const typeLabel = pool.pool_type === 'Outdoor' ? '☀️ Outdoor' : (pool.pool_type === 'Indoor' ? '🏠 Indoor' : '');
+                    const lenLabel = (pool.pool_length && pool.pool_length !== 'Unknown') ? ` · 📏 ${esc(pool.pool_length)}` : '';
                     const dir = (pool.coordinates && pool.coordinates.x && pool.coordinates.y)
                         ? `<div style="margin-top:6px"><a class="map-dir" href="${this.getDirectionsUrl(pool.coordinates)}" target="_blank" rel="noopener">🧭 Directions</a></div>`
                         : '';
                     return `<span class="map-pool-name">${esc(pool.pool_name)}</span>${dist}`
-                        + `<div class="map-pool-meta">${typeLabel}</div>`
+                        + `<div class="map-pool-meta">${typeLabel}${lenLabel}</div>`
                         + `<div class="map-times">${times}</div>${dir}`;
                 },
 

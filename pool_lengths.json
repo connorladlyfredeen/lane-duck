@@ -1,0 +1,500 @@
+{
+  "523": {
+    "name": "Agincourt Recreation Centre",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "893": {
+    "name": "Albion Pool and Health Club",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "897": {
+    "name": "Alderwood Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "31": {
+    "name": "Alexandra Park Outdoor Pool",
+    "length": "50y",
+    "confidence": "high",
+    "source": "user-confirmed"
+  },
+  "480": {
+    "name": "Amesbury Sports Complex",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "939": {
+    "name": "Amos Waites Park Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "17": {
+    "name": "Annette Community Recreation Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "42": {
+    "name": "Antibes Community Centre",
+    "length": "<25m",
+    "confidence": "high",
+    "source": "swimmersguide"
+  },
+  "1143": {
+    "name": "Cedarbrae Collegiate Institute",
+    "length": "25m",
+    "confidence": "medium",
+    "source": "tdsb"
+  },
+  "537": {
+    "name": "Centennial Recreation Centre - Scarborough",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "499": {
+    "name": "Cummer Park Community Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "1056": {
+    "name": "Dennis R. Timbrell Resource Centre",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "760": {
+    "name": "Domenico Di Luca Community Recreation Centre",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "437": {
+    "name": "Donald D. Summerville Olympic Pools",
+    "length": "50m",
+    "confidence": "high",
+    "source": "toronto.ca"
+  },
+  "567": {
+    "name": "Douglas Snow Aquatic Centre",
+    "length": "50m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "575": {
+    "name": "Driftwood Community Recreation Centre",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "36": {
+    "name": "Earl Beatty Community Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "swimmersguide"
+  },
+  "329": {
+    "name": "East York Community Centre",
+    "length": "25y",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "840": {
+    "name": "Eringate Park Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "3775": {
+    "name": "Ethennonnhawahstihnen' Community Recreation Centre & Library",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "892": {
+    "name": "Etobicoke Olympium",
+    "length": "50m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "502": {
+    "name": "Fairbank Memorial Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "1007": {
+    "name": "Fairhaven Park",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "308": {
+    "name": "Fairmount Park Community Centre",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "963": {
+    "name": "Flagstaff Park Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "843": {
+    "name": "Gihon Spring Park Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "642": {
+    "name": "Gord and Irene Risk Community Centre",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "70": {
+    "name": "Greenwood Park",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "896": {
+    "name": "Gus Ryder Pool and Health Club",
+    "length": "25y",
+    "confidence": "high",
+    "source": "swimmersguide"
+  },
+  "768": {
+    "name": "Halbert Park",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "45": {
+    "name": "Harrison Pool",
+    "length": "20y",
+    "confidence": "high",
+    "source": "foursquare"
+  },
+  "633": {
+    "name": "Heron Park Community Centre",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "77": {
+    "name": "High Park",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "48": {
+    "name": "Hillcrest Community Centre",
+    "length": "25y",
+    "confidence": "high",
+    "source": "hillcrestcommunitycentre.com"
+  },
+  "357": {
+    "name": "Humber Community Pool",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "58": {
+    "name": "Jimmie Simpson Recreation Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "jimmiesimpson.ca"
+  },
+  "63": {
+    "name": "John Innes Community Recreation Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "torontoforyou"
+  },
+  "509": {
+    "name": "Joseph J. Piccininni Community Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "421": {
+    "name": "Kiwanis Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "690": {
+    "name": "Knob Hill Park",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "847": {
+    "name": "Lambton - Kingsway Park Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "542": {
+    "name": "Leaside Memorial Gardens Swimming Pool - Indoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "425": {
+    "name": "Leaside Outdoor Pool",
+    "length": "25m",
+    "confidence": "medium",
+    "source": "places2swim"
+  },
+  "678": {
+    "name": "Ledbury Park",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "85": {
+    "name": "Main Square Community Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "100": {
+    "name": "Mary McCormick Recreation Centre",
+    "length": "25y",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "704": {
+    "name": "Maryvale Park",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "234": {
+    "name": "Matty Eckler Recreation Centre",
+    "length": "<25m",
+    "confidence": "medium",
+    "source": "torontoforyou"
+  },
+  "506": {
+    "name": "McGregor Park Community Centre",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "891": {
+    "name": "Memorial Pool and Health Club",
+    "length": "25m",
+    "confidence": "high",
+    "source": "swimmersguide"
+  },
+  "145": {
+    "name": "Monarch Park",
+    "length": "25m",
+    "confidence": "high",
+    "source": "kidzapp"
+  },
+  "797": {
+    "name": "Norseman Community School and Pool",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "189": {
+    "name": "North Toronto Memorial Community Centre Indoor Pool",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "703": {
+    "name": "Northwood Community Centre",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "1093": {
+    "name": "O'Connor Community Centre",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "857": {
+    "name": "Ourland Park Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "2012": {
+    "name": "Pam McConnell Aquatic Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "858": {
+    "name": "Park Lawn Park",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "718": {
+    "name": "Parkway Forest Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "859": {
+    "name": "Pine Point Park Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "877": {
+    "name": "Richmond Gardens Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "343": {
+    "name": "Riverdale Park East",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "867": {
+    "name": "Rotary Peace Park Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "3858": {
+    "name": "Rouge Valley Community Recreation Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "1098": {
+    "name": "Scadding Court Community Centre",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "1315": {
+    "name": "Sir Oliver Mowat Collegiate Institute",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "504": {
+    "name": "Smythe Park",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "272": {
+    "name": "St. Lawrence Community Recreation Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "433": {
+    "name": "Sunnyside Gus Ryder Outdoor Pool",
+    "length": "25m",
+    "confidence": "medium",
+    "source": "toronto.ca"
+  },
+  "282": {
+    "name": "Swansea Community Recreation Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "795": {
+    "name": "The Elms Pool and Community School",
+    "length": "25m",
+    "confidence": "high",
+    "source": "swimmersguide"
+  },
+  "287": {
+    "name": "Trinity Community Recreation Centre",
+    "length": "25y",
+    "confidence": "high",
+    "source": "user-confirmed"
+  },
+  "1371": {
+    "name": "Vaughan Road Academy",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "294": {
+    "name": "Wallace Emerson Community Recreation Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  },
+  "773": {
+    "name": "Wedgewood Park  Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "451": {
+    "name": "Wellesley Community Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "torontoforyou"
+  },
+  "873": {
+    "name": "West Deane Park Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "2642": {
+    "name": "West Mall Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "876": {
+    "name": "Westgrove Park Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "2006": {
+    "name": "Westmount Park Outdoor Pool",
+    "length": "unknown",
+    "confidence": "low",
+    "source": ""
+  },
+  "508": {
+    "name": "Weston Lions Park",
+    "length": "25m",
+    "confidence": "high",
+    "source": "betaandassociates.ca"
+  },
+  "1387": {
+    "name": "Wexford Collegiate Institute",
+    "length": "25y",
+    "confidence": "high",
+    "source": "swimia"
+  },
+  "3501": {
+    "name": "York Recreation Centre",
+    "length": "25m",
+    "confidence": "high",
+    "source": "places2swim"
+  }
+}

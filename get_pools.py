@@ -117,6 +117,7 @@ async def pools(
                     if "outdoor" in (pool.get("location_type", "") + pool.get("complexname", "")).lower()
                     else "Indoor"
                 ),
+                "pool_length": pool.get("pool_length", "Unknown"),
                 "times": [
                     {
                         "start_time": swim_data["start_time"],

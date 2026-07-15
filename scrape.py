@@ -332,6 +332,41 @@ def sanity_check_current_day(pool_data):
     return ok, (f"today={today} sessions_today={today_count} "
                 f"earliest={earliest} latest={latest} covers_today={ok}")
 
+POOL_LENGTHS_FILE = "pool_lengths.json"
+
+
+def apply_pool_lengths(pool_data, lengths_file=POOL_LENGTHS_FILE):
+    """Set a stable pool-level pool['pool_length'] identifier. There is no length
+    in the ArcGIS layer or (usually) the schedule feed, so a curated map fills the
+    gap. Precedence:
+      (1) length encoded in the City's own schedule title (authoritative, rare),
+      (2) curated pool_lengths.json keyed by locationid,
+      (3) "Unknown".
+    Never fatal — a missing/broken map just leaves lengths Unknown."""
+    curated = {}
+    try:
+        with open(lengths_file, "r", encoding="utf-8") as f:
+            curated = json.load(f)
+    except FileNotFoundError:
+        logger.warning(f"{lengths_file} not found; pool lengths will be title-derived only.")
+    except Exception as e:
+        logger.error(f"Failed to load {lengths_file} (non-fatal): {e}")
+
+    known = 0
+    for pool in pool_data:
+        # (1) title-derived: prefer the largest length seen in this pool's sessions
+        seen = {s.get("pool_length") for s in pool.get("swim_data", [])} - {"Unknown", None}
+        title_len = "50m" if "50m" in seen else ("25m" if "25m" in seen else (sorted(seen)[0] if seen else None))
+        # (2) curated by locationid (stringified key)
+        entry = curated.get(str(pool.get("locationid"))) or {}
+        curated_len = entry.get("length") if entry.get("length") not in (None, "unknown") else None
+        pool["pool_length"] = title_len or curated_len or "Unknown"
+        if pool["pool_length"] != "Unknown":
+            known += 1
+    logger.info(f"Pool length known for {known}/{len(pool_data)} pools.")
+    return pool_data
+
+
 def main():
     logger.info("Fetching fresh data from Toronto API...")
 
@@ -351,6 +386,9 @@ def main():
 
     # Deduplicate pools by name while preserving all swim times
     pool_data = deduplicate_pools(pool_data)
+
+    # Tag each pool with a stable length identifier (curated + title-derived)
+    pool_data = apply_pool_lengths(pool_data)
 
     # Save the cleaned data back to the file
     with open(CACHE_FILE, 'w', encoding='utf-8') as f:
